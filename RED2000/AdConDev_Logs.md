@@ -80,9 +80,16 @@
 
 - I did research a checked some options and the last decition is to make each protocol module a separate go package, but all in one. Protocols behave very differently, so this approach should help in managing their specificities. All of them will be contained within the same repository. Finally, the idea is to create a registry that can handle many printers abstracting the idea of a Point-of-Sale (POS) system.
 
+- Set up pull request and issues in pos-printer repository. All is about the new architecture.
+- I should generate the necessary documentation for each protocol module.
+- I need to dump the tasks from my diary to backlog items in the github project. It easy to get lost on what is missing.
+- I need to check how is github used for project management in a production environment.
+- About the new architecture i have started with the ESCPOS basic commands for text and formatting. Those commands only return byte slices and they are concerned to validate input to printers. In the second layer, I plan to implement more complex logic, such autoformatting to active charset corresponding to the Cope Page in printer. Also, better error handling with specific error types.
+
 
 ## Extra Notes
-
+- [Video](https://youtu.be/bi5UxoEVX_E?si=HKV8f-eU13nYogV1) acerca del boot de Puppy Linux. Sirve hasta el minuto 3:45.
+- Tutorial a formatear: [Enlace al tutorial](https://www.geekstogo.com/forum/topic/274691-use-puppy-linux-live-cd-to-recover-your-data/)
 - Books to Look for:
   - The Art of Concurrency, O'Reilly.
 - Words I heard today: Odoo, Endpoint, Business Logic, Kiosko, MVP, VPS, Hash/MD5/SHA256, clientes pesados, criptografía, paginación, Trello, contratos de datos y joins en db.
