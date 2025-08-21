@@ -74,22 +74,27 @@
 - I keep reviewing the overall architecture since I didn't realize how different protocols were from each other. So, the same print command can work, but what about CutLabel, since ESCPOS don't have a direct equivalent?
 
 ## 18/08/2025 - 22/08/2025
-- I was pretty stucked with a refactoring, i have to separate each module type(ESCPOS, Zpl, etc.). I still looking for  faster and easier way to migrate to a new architecture.
+- I was pretty stuck with a refactor; I need to separate each module type (ESCPOS, ZPL, etc.). I'm still looking for a faster, easier way to migrate to the new architecture.
 - Implemented better barcode support.
-- Learned about channels and goroutines in Go.
+- Learned more about channels and goroutines in Go.
 
-- I did research a checked some options and the last decition is to make each protocol module a separate go package, but all in one. Protocols behave very differently, so this approach should help in managing their specificities. All of them will be contained within the same repository. Finally, the idea is to create a registry that can handle many printers abstracting the idea of a Point-of-Sale (POS) system.
+- I researched and evaluated several options; the final decision is to make each protocol module a separate Go package, but keep them all in the same repository. Protocols behave very differently, so this approach should help manage their specificities. The plan is to create a registry to handle multiple printers and abstract the Point-of-Sale (POS) concept.
 
-- Set up pull request and issues in pos-printer repository. All is about the new architecture.
+- Set up pull requests and issues in the pos-printer repository; these track the new architecture work.
 - I should generate the necessary documentation for each protocol module.
-- I need to dump the tasks from my diary to backlog items in the github project. It easy to get lost on what is missing.
-- I need to check how is github used for project management in a production environment.
-- About the new architecture i have started with the ESCPOS basic commands for text and formatting. Those commands only return byte slices and they are concerned to validate input to printers. In the second layer, I plan to implement more complex logic, such autoformatting to active charset corresponding to the Cope Page in printer. Also, better error handling with specific error types.
+- I need to move diary tasks into backlog items in the GitHub project — it's easy to lose track of what's missing.
+- I need to review how GitHub is used for project management in production.
 
+- Regarding the new architecture, I started with ESCPOS basic commands for text and formatting. These commands return byte slices and focus on validating input for printers. In a second layer I plan to implement more complex logic: auto-formatting to the active charset corresponding to the printer code page, and improved error handling with specific error types.
+
+- Learning about stack, heap and garbage collection in Golang. Also migrating to Go 1.25.
+- The new architecture is going well, for now i have visualized that i need 2 version of ESCPOS, Standard and Page Mode, which could be handled by the same codebase with different configurations. Page Mode commands will be ignored for now.
+- Basic commands done:
+  - Printing 
 
 ## Extra Notes
 - [Video](https://youtu.be/bi5UxoEVX_E?si=HKV8f-eU13nYogV1) acerca del boot de Puppy Linux. Sirve hasta el minuto 3:45.
 - Tutorial a formatear: [Enlace al tutorial](https://www.geekstogo.com/forum/topic/274691-use-puppy-linux-live-cd-to-recover-your-data/)
 - Books to Look for:
   - The Art of Concurrency, O'Reilly.
-- Words I heard today: Odoo, Endpoint, Business Logic, Kiosko, MVP, VPS, Hash/MD5/SHA256, clientes pesados, criptografía, paginación, Trello, contratos de datos y joins en db.
+- Words I heard today: Odoo, Endpoint, Business Logic, Kiosko, MVP, VPS, Hash/MD5/SHA256, clientes pesados, criptografía, paginación, Trello, procesamiento en db de prod, deslindarse inmediatamente, DNS, VMS, Podman y Containers, Exponential Backoff.
