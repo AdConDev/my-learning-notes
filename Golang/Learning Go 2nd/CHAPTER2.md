@@ -1,276 +1,316 @@
-# Predeclared Types and Declarations
+# **Chapter 2: Predeclared Types and Declarations**
 
-While every programmer has experience with these concepts, Go does some things differently, and subtle differences exist between Go and other languages.
+> *Based on "Learning Go (2nd Edition)"*  
+> **Objective**: Understand Go’s built-in types, variable declarations, and constants for more expressive and error-free code.
 
-## The Predeclared Types
+---
 
-Go has many types built into the language. These are called ***predeclared types***. They are similar to types that are found in other languages: *booleans, integers, floats, and strings*.
+## **Table of Contents**
+1. [Introduction](#introduction)  
+2. [Predeclared Types](#predeclared-types)  
+   - [Zero Value](#zero-value)  
+   - [Literals](#literals)  
+   - [Booleans](#booleans)  
+   - [Numeric Types](#numeric-types)  
+3. [Strings and Runes](#strings-and-runes)  
+4. [Explicit Type Conversion](#explicit-type-conversion)  
+5. [var vs :=](#var-vs-)  
+6. [Using const](#using-const)  
+   - [Typed and Untyped Constants](#typed-and-untyped-constants)  
+7. [Unused Variables](#unused-variables)  
+8. [Naming Variables and Constants](#naming-variables-and-constants)  
+9. [Summary and Quick Revision](#summary-and-quick-revision)  
+   - [Extra Tips](#extra-tips)  
+   - [Best Practices](#best-practices)  
+   - [Common Pitfalls](#common-pitfalls)  
+   - [Interview Questions](#interview-questions)  
 
-### The Zero Value
+---
 
-Go, like most modern languages, assigns a default ***zero value*** to any variable that is declared but not assigned a value.
+## **Introduction**
+Go provides a rich set of **predeclared types** (booleans, integers, floats, strings, runes) and straightforward **declaration rules**. Although these concepts exist in most languages, Go’s approach emphasizes clarity and simplicity:  
+- **Zero values** to avoid null references or uninitialized variables.  
+- **Untyped literals** to allow flexible assignment.  
+- **Strict declaration rules** to encourage explicit code.
 
-### Literals
+---
 
-A ***Go literal*** is an explicitly specified number, character, or string.
+## **Predeclared Types**
+Go ships with many built-in types that streamline everyday coding tasks, commonly grouped into:
+1. **Boolean** (*bool*)
+2. **Numeric** (*int, float64, etc.*)
+3. **String** and **Rune**
 
-An ***integer literal*** is a sequence of numbers. Integer literals are base 10 by default, but different prefixes are used to indicate other bases: 0b for binary (base 2), 0o for octal (base 8), or 0x for hexadecimal (base 16).
+### **Zero Value**
+In Go, declared variables that aren’t initialized receive a default **zero value**:  
+- **bool** → `false`  
+- **numeric types** → `0` (e.g., `int`, `float64`)  
+- **string** → `""` (empty string)  
+- **pointer** → `nil`  
 
-A ***floating-point literal*** has a decimal point to indicate the fractional portion of the value. They can also have an exponent specified with the letter e and a positive or negative number (such as 6.03e23).
+> **Why Zero Value?**  
+> Reduces the chance of runtime errors from uninitialized variables.
 
-A ***rune literal*** represents a character and is surrounded by single quotes. Unlike many other languages, in Go ***single quotes and double quotes are not interchangeable***.
+---
 
-There are two ways to indicate ***string literals***. Most of the time, you should use double quotes to create an interpreted string literal (e.g., type *"Greetings and Salutations"*).
+### **Literals**
+A literal is a fixed value in source code. Common literal forms:
 
-If you need to include backslashes, double quotes, or newlines in your string, using a ***raw string literal*** is easier. These are delimited with ***backquotes (`)*** and can contain any character except a backquote.
+- **Integer literals**:
+  ```go
+  var dec int = 10   // decimal
+  var bin int = 0b1010   // binary
+  var oct int = 0o12     // octal
+  var hex int = 0xA      // hexadecimal
+  ```
 
-***Literals*** are considered untyped. Go uses the default type for a literal; if there's nothing in the expression that makes clear what the type of the literal is, the literal defaults to a type.
+- **Floating-point literals**:
+  ```go
+  var f1 float64 = 10.0    // decimal
+  var f2 float64 = 1.0e+10 // scientific notation
+  var f3 float64 = 0x1p+0  // hexadecimal floating-point
+  ```
 
-### Booleans
+- **Rune literals** (single quotes):
+  ```go
+  var r1 rune = 'A'       // Unicode character
+  var r2 rune = '\101'    // octal
+  var r3 rune = '\x41'    // hex
+  var r4 rune = '\u0041'  // 16-bit Unicode
+  var r5 rune = '\U00000041' // 32-bit Unicode
+  ```
 
-Variables of ***bool*** type can have one of two values: *true* or *false*. The zero value for a ***bool*** is *false*.
+- **String literals**:
+  - **Interpreted** (double quotes `" "`):
+    ```go
+    var s1 string = "hello\nworld"
+    ```
+  - **Raw** (backquotes `` ` ` ``):
+    ```go
+    var s2 string = `hello\nworld`
+    ```
+  Raw strings keep all special characters (except the backquote) literally.
+
+---
+
+### **Booleans**
+- Declared via the `bool` type.
+- Possible values: `true` or `false`.
+- Zero value is `false`.
 
 ```go
-var flag bool // no value assigned, set to false
+var flag bool      // defaults to false
 var isAwesome = true
 ```
 
-### Numeric Types
+> **Reminder**: Go does **not** allow implicit truthiness or falsiness (like in some scripting languages). You must use comparison operators to obtain a boolean value.
 
-Go has a large number of numeric types: 12 types (and a few special names) that are grouped into three categories.
+---
 
-#### Integers types
+### **Numeric Types**
+Go has a rich set of numeric types to suit various performance and memory constraints.
 
-Go provides both signed and unsigned integers in a variety of sizes, from one to eight bytes.
+#### **Integers**
+Signed and unsigned integers in one to eight bytes:
 
-![The integer types in Go](img/tab2-1.png)
+| **Type** | **Size**     | **Range (Signed)**                    |
+|----------|--------------|---------------------------------------|
+| `int8`   | 1 byte (8 bits)  | -128 to 127                        |
+| `int16`  | 2 bytes (16 bits) | -32768 to 32767                   |
+| `int32`  | 4 bytes (32 bits) | -2,147,483,648 to 2,147,483,647    |
+| `int64`  | 8 bytes (64 bits) | -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807 |
+| `uint8`  | 1 byte (8 bits)  | 0 to 255                           |
+| `uint16` | 2 bytes (16 bits) | 0 to 65535                        |
+| `uint32` | 4 bytes (32 bits) | 0 to 4,294,967,295                |
+| `uint64` | 8 bytes (64 bits) | 0 to 18,446,744,073,709,551,615    |
 
-It might be obvious from the name, but the *zero value* for all of the integer types is 0.
+**Special integer names** in Go:
+- `byte` (alias for `uint8`)
+- `int` (typically 32-bit or 64-bit depending on platform)
+- `uint` (same size as `int`, but unsigned)
 
-#### The special integer types
+> **Zero value** for integers is `0`.
 
-A ***byte*** is an alias for *uint8*; it is legal to assign, compare, or perform mathematical operations between a *byte* and a *uint8*.
+**Common operators**:
+- Arithmetic: `+ - * / %`  
+- Combination assignments: `+=, -=, *=, /=, %=`
+- Comparisons: `==, !=, >, >=, <, <=`
+- Bitwise: `<<, >>, &, |, ^, &^` (+ combo assignments)
 
-The second special name is *int*. Integer literals default to being of *int* type.
-
-The third special name is *uint*. It follows the same rules as *int*, only it is unsigned (the values are always 0 or positive).
-
-#### Integer operators
-
-Go integers support the usual arithmetic operators: *+, -, *, /, with % for modulus.*
-
-You can combine any of the arithmetic operators with = to modify a variable: *+=, -=, *=, /=, and %=.*
-
+Example:
 ```go
 var x int = 10
-x *= 2 // x is now 20
+x += 5   // 15
+x <<= 2  // 60
 ```
 
-You compare integers with *==, !=, >, >=, <, and <=.*
+#### **Floating-Point**
+Two primary floating-point types: `float32` and `float64`.
 
-You can bit shift left and right with << and >>, or do bit masks with *& (bitwise AND), | (bitwise OR), ^ (bitwise XOR), and &^ (bitwise AND NOT)*. As with the arithmetic operators, you can also combine all the bitwise operators with = to modify a variable: *&=, |=, ^=, &^=, <<=, and >>=*.
+| **Type**   | **Size**    | **Range**         |
+|------------|-------------|-------------------|
+| `float32`  | 4 bytes     | ±1.18e-38 to ±3.4e+38  |
+| `float64`  | 8 bytes     | ±2.23e-308 to ±1.8e+308|
 
-#### Floating-point types
+- Zero value: `0.0`
+- Defaults: Unannotated floating literals become `float64`.
 
-Go has two floating-point types: *float32* and *float64*. 
+> **Infinity & NaN**: Dividing a nonzero float by `0` → `±Inf`. Dividing `0.0` by `0.0` → `NaN`.
 
-![The floating-point types in Go](img/tab2-2.png)
+---
 
-The zero value for both is 0.0.
-
-Floating-point literals have a default type of *float64*, so always using *float64* is the simplest option.
-
-> *Don't worry about the difference in memory size unless you have used the profiler to determine that it is a significant source of problems.*
-
-Dividing a nonzero floating-point variable by 0 returns *+Inf or -Inf (positive or negative infinity)*, depending on the sign of the number. Dividing a floating-point variable set
-to 0 by 0 returns *NaN (Not a Number)*.
-
-### A Taste of Strings and Runes
-
-Like most modern languages, Go includes *strings* as a built-in type. The zero value for a *string* is the *empty string*.
-
-Like *integers* and *floats*, *strings* are compared for equality using *==*, difference with *!=*, or ordering with *>, >=, <, or <=*. They are concatenated by using the *+* operator.
-
-Strings in Go are ***immutable***; you can reassign the value of a string variable, but *you cannot change the value of the string that is assigned to it*.
-
-The *rune* type is an alias for the *int32* type, just as *byte* is an alias for *uint8*. As you could probably guess, a *rune* literal's default type is a *rune*, and a *string* literal's default type is a *string*.
-
-If you are referring to a *character*, use the *rune* type, not the *int32* type.
+## **Strings and Runes**
+- **String** zero value is the empty string `""`.
+- Strings are **immutable**; you can’t modify them in place.
+- **Rune** is an alias for `int32`; default type for a rune literal (`'A'`) is `rune`.
 
 ```go
-var myFirstInitial rune = 'A' // good - the type name matches the usage
-var myLastInitial int32 = 'B' // bad - legal but confusing
+var c rune = 'A'    // recommended
+var d int32 = 'B'   // valid but confusing
 ```
 
-### Explicit Type Conversion
+Strings support:
+- Equality checks `==` and `!=`
+- Lexicographical comparisons `>`, `<`, `>=`, `<=`
+- Concatenation with `+`
 
-As a language that values *clarity of intent and readability*, Go doesn't allow ***automatic type promotion*** between variables. You must use a type conversion when variable types do not match. Even different-sized *integers and floats* must be converted to the same type to interact.
+---
+
+## **Explicit Type Conversion**
+Go **does not** allow automatic type promotions. You must convert explicitly:
 
 ```go
 var x int = 10
 var y float64 = 20.0
+
+// Convert x to float64
 var sum1 float64 = float64(x) + y
+
+// Convert y to int
 var sum2 int = x + int(y)
 ```
 
-In fact, ***no*** other type can be converted to a *bool*, implicitly or explicitly. If you want to convert from another data type to *boolean*, you must use one of the comparison operators(*==, !=, >, <, <=, or >=*).
+> **No Implicit Truthiness**: You cannot do `if x { ... }` to check if `x` is nonzero. Instead use `if x != 0 { ... }`.
 
-> *Type conversions are one of the places where Go chooses to add a little verbosity in exchange for a great deal of simplicity and clarity.*
+---
 
-### Literals are Untyped
+## **var vs :=**
+Two primary ways to declare variables:
 
-Go lets you use an integer literal in floating-point expressions or even assign an integer literal to a floating-point variable.
+1. **`var`** declarations:
+   ```go
+   var a int = 10        // explicit type
+   var b = 10            // inferred type
+   var c int             // zero value
+   var d, e int = 10, 20 // multiple variables
+   var (
+       f   int
+       g   int = 20
+       h       = "hello"
+   )
+   ```
 
-```go
-var x float64 = 10
-var y float64 = 20.3 * 5
-```
+2. **`:=`** short declaration (only **inside** functions):
+   ```go
+   x := 10
+   y, z := 20, "hello"
+   ```
 
-Go is a practical language, and it makes sense to ***avoid forcing*** a type until the developer specifies one. Being untyped goes only so far; you ***can't*** assign a literal string to a variable with a numeric type or a literal number to a string variable, ***nor*** can you assign a float literal to an int.
+**Preferred Usage**:
+- Use `:=` **within functions** for brevity.
+- Use `var` **outside functions** (package-level) because `:=` is disallowed there.
+- Multi-variable declarations with `:=` are often used for **function return values** or the **comma ok idiom**.
 
-## var VS :=
+---
 
-Each declaration style ***communicates*** something about how the variable is used.
-
-The most verbose way to declare a variable in Go uses the ***var*** keyword, an explicit type, and an assignment:
-
-```go
-var x int = 10
-```
-
-If the type on the righthand side of the = is the ***expected type*** of your variable, you can leave off the type from the left side of the =:
-
-```go
-var x = 10
-```
-
-Conversely, if you want to declare a variable and ***assign it the zero value***, you can keep the type and drop the = on the righthand side:
-
-```go
-var x int
-```
-
-You can declare ***multiple variables*** at once with var, and they can be of the same type:
+## **Using const**
+Constants (`const`) define **immutable** named values known at compile time. They **cannot** be the result of runtime computations.
 
 ```go
-var x, y int = 10, 20
-```
-
-You can declare ***all zero values*** of the same type:
-
-```go
-var x, y int
-```
-
-or of ***different types***:
-
-```go
-var x, y = 10, "hello"
-```
-
-If you are declaring multiple variables at once, you can wrap them in a ***declaration list***:
-
-```go
-var (
-    x   int
-    y   int = 20
-    z   int = 30
-    d, e    = 40, "hello"
-    f, g string
-)
-```
-
-Go also supports a ***short declaration and assignment format***. When you are within a function, you can use the ***:=*** operator to replace a var declaration that uses ***type inference***:
-
-```go
-var x = 10
-x := 10
-```
-
-As with var, you can declare ***multiple variables*** at once using :=:
-
-```go
-var x, y = 10, "hello"
-x, y := 10, "hello"
-```
-
-The := operator can do one trick that you cannot do with var: it allows you to ***assign values to existing variables too***.
-
-```go
-x := 10
-x, y := 20, "hello"
-```
-
-If you are declaring a variable at the ***package level***, you must use var because := is ***not legal*** outside of functions.
-
-The ***most common*** declaration style within functions is :=. Outside of a function, use ***declaration lists*** on the rare occasions when you are declaring multiple ***package-level*** variables.
-
-While ***var and :=*** allow you to declare multiple variables on the same line, use this style only when assigning multiple ***values returned*** from a function or the ***comma ok idiom***.
-
-As a general rule, you should only declare variables in the ***package block*** that are effectively ***immutable***.
-
-## Using const
-
-Many languages have a way to declare a value as ***immutable***. In Go, this is done with the ***const*** keyword.
-
-```go
-const x = 10
-```
-
-***Constants*** in Go are a way to give names to literals. Go doesn't provide a way to specify that a value calculated at ***runtime*** is immutable.
-
-```go
+const a = 10    // allowed
 x := 10
 y := 20
-const z = x + y // this won't compile!
+const z = x + y // compile error - x + y is runtime
 ```
 
-## Typed and Untyped Constants
-
-An ***untyped constant*** works exactly like a literal; it has no type of its own but does ***have a default type*** that is used when no other type can be inferred. A ***typed constant*** can be directly assigned ***only*** to a variable of that type.
-
-In general, leaving a constant ***untyped*** gives you more flexibility. In certain situations, you'll want a constant to enforce a type.
+### **Typed and Untyped Constants**
+- **Untyped constant**: No fixed type, but a default type is inferred if needed.
+- **Typed constant**: Only assignable to variables of the same type.
 
 ```go
-const x = 10 // untyped constant declared
+const x = 10        // untyped
+var y int = x       // legal
+var z float64 = x   // also legal
 
-var y int = x // this is legal
-var z float64 = x // this is legal
-var d byte = x // this is legal
-
-const typedX int = 10 // typed constant declared
+const typedX int = 10
+// typedX can only assign directly to int variables
 ```
 
-## Unused Variables
+---
 
-Another Go requirement is that every declared local variable ***must be read***. It is a compile-time error to declare a local variable and to not read its value.
-
-As long as a variable is read ***once***, the compiler won't complain, even if there are writes to the variable that are never read.
+## **Unused Variables**
+Go enforces that **every declared local variable must be read** at least once; otherwise, it’s a compile-time error:
 
 ```go
 func main() {
-    x := 10 // this assignment isn't read!
-    x = 20
-    fmt.Println(x)
-    x = 30 // this assignment isn't read!
+    x := 10      // assigned but not read
+    x = 20       // updated
+    fmt.Println(x)  // read -> OK
+    x = 30       // assigned but never read
 }
 ```
 
-> *The Go compiler won't stop you from creating unread package level variables. This is one more reason you should avoid creating package-level variables.*
+- **Package-level** variables can remain unused without compile-time errors.
+- **Unused constants** are allowed, as they have no runtime footprint.
 
-Perhaps surprisingly, the Go compiler allows you to create ***unread constants*** with **const**. This is because constants in Go ***are calculated at compile time*** and cannot have any side effects.
+---
 
-## Naming Variables and Constants
+## **Naming Variables and Constants**
+- Must start with a letter or underscore (`_`); can contain letters, digits, underscores.
+- **CamelCase** is idiomatic in Go.
+- Smaller scopes → shorter names (`i`, `j`). Larger scopes → more descriptive (`indexCounter`).
 
-Like most languages, Go requires ***identifier names*** to start with a letter or underscore, and the name can contain numbers, underscores, and letters. ***Any*** Unicode character considered a letter or digit is allowed.
+> **Guideline**: If a short name confuses you, your function or block might be doing too much. Keep scopes small, names meaningful.
 
-Instead, idiomatic Go uses ***camel case*** when an identifier name consists of multiple words.
+---
 
-```go
-var indexCounter int
-var numberTries int
-```
+## **Summary and Quick Revision**
+1. **Types**: Mastering booleans, numeric types, runes, and strings helps avoid confusion.  
+2. **Zero Values**: Avoids null references; uninitialized variables default to a safe zero value.  
+3. **Literals**: Integers, floats, runes, strings are flexible. Untyped allows easy usage across expressions.  
+4. **Conversions**: Go is explicit about type conversion, reinforcing readability.  
+5. **Declarations**: `var` (package-level) vs `:=` (function-level).  
+6. **Constants**: Compile-time named literals; not for runtime expressions.  
+7. **Naming**: Use descriptive names in broader scopes; short names for tight scopes or idiomatic patterns.
 
-> *The smaller the scope for a variable, the shorter the name that's used for it.*
+### **Extra Tips**
+- **Use `float64`** by default for floating-point calculations to avoid subtle precision issues.  
+- **Remember** that rune is just `int32`—useful for storing Unicode code points.  
+- **Practice** bitwise operations (`&`, `|`, `^`) for performance-critical tasks like cryptography or image processing.
 
-When naming variables and constants in the *package block*, use more *descriptive* names.
+### **Best Practices**
+- Favor **short declarations** (`:=`) for local variables; it improves readability.  
+- Keep **constants untyped** where possible for greater flexibility.  
+- Use **package-level variables** sparingly; prefer function-level or smaller-scope variables.
+
+### **Common Pitfalls**
+1. **Forgetting to read a local variable** → compile-time error.  
+2. **Confusing `=` with `:=`** → `:=` only works inside functions.  
+3. **Implicit conversions** → not allowed; must cast explicitly.  
+4. **Unused import** or **unused variable** → compiler error in Go.  
+
+### **Interview Questions**
+1. **What is a zero value, and how does it help in Go?**  
+   Answer: A zero value is the default value assigned to a variable when it is declared but not initialized. It helps avoid null references and provides a safe starting point for variables.
+2. **Explain how untyped constants work in Go.**  
+   Answer: Untyped constants do not have a fixed type until they are assigned to a variable. They can be used flexibly across different types, and Go infers the appropriate type based on context. 
+3. **Why does Go forbid implicit type promotion?**  
+   Answer: Go forbids implicit type promotion to maintain clarity and avoid hidden errors. Explicit type conversions make the code more readable and help prevent unintended behavior.
+4. **When do you use `var` vs `:=`?**  
+   *Answer Hint: Mention scope and usage contexts.*  
+5. **What happens if you attempt to do a runtime operation in a constant declaration?**  
+   *Answer Hint: It won’t compile; constants must be known at compile time.*  
+
+---
+
+> **Next Steps**: Practice writing short code snippets using these types and declarations. Experiment with constants and the `var` vs. `:=` style in various scopes to understand their usage and limitations.
