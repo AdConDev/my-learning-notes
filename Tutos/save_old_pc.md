@@ -1,6 +1,6 @@
 # Recuperación de Datos
 
-No necesitas hacer todo de una, si logras entrar a la BIOS, al menos puedes estar segura de que la lap esta funcional. Lo mismo aplica para la otra PC. Igual y no necesitas la USB para la primera parte que es configurar la BIOS. En una lap como del 2015 tenía una BIOS similar, en el mejor de los escenarios, también será tu caso.
+No necesitas hacer todo de una, si logras entrar a la BIOS, al menos puedes estar segura de que la lap esta funcional. Lo mismo aplica para la otra PC. Igual y no necesitas la USB para la primera parte que es configurar la BIOS. En una lap como del 2015 tenía una BIOS similar a la de las imágenes, en el mejor de los escenarios, también será tu caso.
 
 > ***La idea de hacerlo así es porqué 1. Puppy Linux es super ligero, 2. Los virus de Windows no afectan a distros Linux.***
 
@@ -74,7 +74,7 @@ La BIOS es donde puedes cambiar la configuración del orden de arranque.
 
 ## 3. Recuperar tus datos
 
-> ***Algo así verás al iniciar el Puppy Linux. No hagas lo de la instalación o puedes perder tus datos, con que llegues al escritorio esta bien. [Video 3:25 al 3:40](https://youtu.be/phZt9YA3ny8?si=6DWvteb1QmAIlwvF&t=206)***
+> ***Algo así verás al iniciar el Puppy Linux. No hagas lo de la instalación o puedes perder tus datos, con que llegues al escritorio esta bien. [Video del 3:25 al 3:40](https://youtu.be/phZt9YA3ny8?si=6DWvteb1QmAIlwvF&t=206)***
 
 Verás una interfaz gráfica completa similar a lo que normalmente llamas "escritorio".
 
@@ -98,7 +98,7 @@ Una vez que arrastres y sueltes tu primera carpeta, aparecerá un pequeño menú
 
 ## ¿Todo listo?
 
-Para apagar la lap, simplemente haz clic en *Menu >> Pasa el ratón sobre Shutdown >> Reboot/Turn Off Computer*. Asegúrate de conectar tu unidad USB a otra máquina Windows funcionando para verificar que todos los datos están allí y se transfirieron sin corrupción.
+Para apagar la lap, simplemente haz clic en *Menu >> Pasa el ratón sobre Shutdown >> Reboot/Turn Off Computer*. Después de extraer los datos, asegúrate de conectar tu unidad USB a otra máquina Windows funcionando para verificar que todos los datos están allí y se transfirieron sin corrupción.
 
 ## Insisto
 
