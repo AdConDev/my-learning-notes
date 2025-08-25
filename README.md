@@ -8,7 +8,7 @@
 
 ### Golang
 
-1. *Bodner, J. (2024). Learning Go, 2nd Edition. O’Reilly Media.*
+1. *Bodner, J. (2024). Learning Go, 2nd Edition. O'Reilly Media.*
 
 ## Resources
 
@@ -18,7 +18,7 @@
 
 ### System Design
 
-1. [System Design Interview](https://bytebytego.com/courses/system-design-interview/scale-from-zero-to-millions-of-users): **The section "Scale From Zero To Millions Users"** provide a lot of context. All systems scale from the same fundamentals and in a similar way.
+1. [System Design Interview](https://bytebytego.com/courses/system-design-interview/scale-from-zero-to-millions-of-users): The section **"Scale From Zero To Millions Users"** provide a lot of context. All systems scale from the same fundamentals and in a similar way.
 
 ## Python
 
