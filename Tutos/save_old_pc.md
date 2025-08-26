@@ -15,10 +15,12 @@
 
 > ***Teclado y mouse hacen todo más fácil.*** 
 
-Ten a la mano la USB de Puppy Linux en la lap, asi como la USB para extraer los datos, si esta última no tiene mucha memoria, sería estar vaciando lo que vayas rescatando en la otra lap varias veces.
+Ten a la mano la USB de Linux, asi como la USB para extraer los datos, si esta última no tiene mucha memoria, sería estar vaciando lo que vayas rescatando a la otra lap varias veces.
 
 ### 1.1. Consideraciones 
 
 > ***Te recomiendo que tengas la otra lap a la mano por si necesitas ver algun vídeo o este intento de guía.***
 
-Honestamente, no te recomiendo extraer ***ningún .exe, .scr, o .lib de la lap***. Si alguno de estos archivos está infectado, podrías estar copiando el ***malware*** a cualquier PC. **Solo copia documentos, imágenes, música, código o videos.** Además, **no puedes salvar** programas(`MatLab.exe`, `LabView.exe`, etc.) como tal, lo que sí se puede rescatar son archivos o scripts(`.mat`, `.py`, etc.).
+No te recomiendo extraer ***ningún .exe, .scr, o .lib de la lap***. Si alguno de estos archivos está infectado, podrías estar copiando el ***malware*** a cualquier PC. *Si ya los copiaste no pasa nada, solo ten cuidado, el problema llega al darles click por accidente y estos se ejecuten.*
+
+**Solo copia documentos, imágenes, música, código o videos.** Además, **no puedes salvar** programas(`MatLab.exe`, `LabView.exe`, etc.) como tal, lo que sí se puede rescatar son archivos o scripts(`.mat`, `.py`, etc.).

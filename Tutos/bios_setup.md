@@ -7,21 +7,22 @@
 
 ### 2.1. Enciende la lap y espera por el mensaje de configuración de la BIOS.
 
-> ***La pantalla de carga es donde sale la marca "Dell", "Gateway" u otra marca, casi siempre ahí indica que tecla es la buena.***
+> ***La pantalla de carga es donde sale la marca "Dell", "Gateway" u otra marca, casi siempre ahí indica que tecla te lleva a la BIOS.***
 
 ![Mensaje de Configuración de la BIOS](img/load_screen.jpg)
 
-- Ahora, en mi experiencia, siempre me ha tocado que sea F11 o F8 para entrar a la BIOS.
-- **Inmediatamente** comienza a pulsar la tecla para entrar en la BIOS (en algunos otros casos puede ser F2, F7, Del).
-- **Presiónala varias veces, puedes probar varias a la vez.**
+- Ahora, en mi experiencia, siempre me ha tocado que sea *F11 o F8* para entrar a la BIOS.
+- **Inmediatamente** comienza a pulsar la tecla para entrar en la BIOS (*en algunos otros casos puede ser F2, F7, Del*).
+
+> ***Presiónala varias veces, puedes probar varias a la vez.***
 
 ### 2.2. Accede a la utilidad de configuración de la BIOS
 
-> ***Si de plano se ve confusa tu BIOS, busca un video en YouTube con el modelo de tu lap y "BIOS"***
+> ***Si tu BIOS es confusa, busca un video en YouTube con el modelo de tu lap y "BIOS"***
 
 ![Menu Principal](img/bios_menu.jpg)
 
-- Luego de presionar el comando correcto del paso previo en el teclado, accederás a la utilidad de configuración de la BIOS. Los cambios en el orden de arranque son realizados en el menú Boot.
+- Si salió bien lo de la tecla de la BIOS, accederás a la utilidad de configuración de la BIOS. **Los cambios en el orden de arranque son realizados en el menú Boot.**
 
 ### 2.3. Localizar las opciones de orden de arranque en la BIOS
 
@@ -29,7 +30,8 @@
 
 ![Orden de Arranque](img/boot_order.jpg)
 
-- Para seleccionar qué dispositivo arrancará primero, sigue las instrucciones en la pantalla de la utilidad de setup la BIOS para cambiar el orden de arranque. En este ejemplo de BIOS, el orden de arranque puede ser modificado utilizando las teclas + y -. A veces es con Arriba / Abajo.
+- Para seleccionar qué dispositivo arrancará primero, sigue las instrucciones en la pantalla de la utilidad de setup la BIOS para cambiar el orden de arranque.
+- En este ejemplo de BIOS, el orden de arranque puede ser modificado utilizando las teclas + y -. A veces es con Arriba / Abajo.
 
 ## 2.4 Haz cambios en el orden de arranque
 
@@ -51,7 +53,7 @@
 
 ![Confirmar Cambios](img/confirm_changes.jpg)
 
-- Lee el mensaje cuidadosamente para asegurarte que te encuentras efectivamente guardando tus cambios y no saliendo sin guardarlos. A veces sale medio raro ese mensaje.
+- Lee el mensaje cuidadosamente para asegurarte que te encuentras efectivamente guardando tus cambios y no saliendo sin guardarlos.
 
 ## 2.7 Inicia la lap con el nuevo orden de arranque
 
