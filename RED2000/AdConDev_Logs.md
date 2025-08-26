@@ -121,10 +121,34 @@
 
 ### Testing and Delivery
 - Implemented robust testing for basic commands:
-  - Unit testing with mocks
-  - Integration testing simulating real ESCPOS printer behavior
+  - Printing
+  - Line Spacing
 - Planning to replicate testing approach for all commands
 - Investigating PDF/image generation as additional protocol option for receipt delivery
 - Focusing on delivering working prototype ASAP
 - Need to consolidate backlog items from laptop notes to GitHub Project
 - Established weekly policy to push to remote branches with open PRs every Friday
+
+#### 1. **Dependency Injection Testing**
+**Purpose**: Verify that your code works with any implementation of an interface
+- Tests flexibility and substitutability
+- Ensures loose coupling
+- Validates the Liskov Substitution Principle
+
+#### 2. **Fake Implementation Testing**
+**Purpose**: Test behavior with stateful simulations
+- Tracks accumulated state over multiple operations
+- Simulates real-world behavior without real hardware
+- Useful for integration testing
+
+#### 3. **Interface Composition Testing**
+**Purpose**: Verify that composite interfaces work correctly
+- Tests that a type implements multiple interfaces
+- Validates interface embedding
+- Ensures polymorphic behavior
+
+#### 4. **Mock Testing**
+**Purpose**: Verify interactions and behavior
+- Tracks method calls
+- Controls return values
+- Simulates error conditions

@@ -1,13 +1,15 @@
 # Learning Resources and Terminology
 
-## Books to Explore
+## Books and topics to Explore
 - The Art of Concurrency, O'Reilly
 - Docker: Up & Running, O'Reilly
 - Github Actions in Action, O'Reilly
+- gRPC Microservices in Go, Manning Publications
+- GoLang for Machine Learning, Independently Published
+- System Design Interview Vol. 2, Alex Xu
 
-## Technical Terms and Concepts
-- Odoo, Endpoint, MVP, VPS
+## Technical Terms To Check (or Explain?)
+- API Endpoint, MVP, VPS, Ping, SMTP
 - Hash/MD5/SHA256, cryptography, pagination
-- Trello, production database processing
 - DNS, VMS, Podman and Containers
 - Exponential Backoff, deadlock
