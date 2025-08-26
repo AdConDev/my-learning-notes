@@ -1,100 +1,142 @@
-# Mental Notes / Backlog Items
-## 07/08/2025 - 12/08/2025
+# Development Backlog and Notes
+
+## Week of 07/08/2025 - 12/08/2025
+
 ### Repository Improvements
-- Create templates for issues, bugs, and feature requests.
-- Set up CI workflows:
-  - Test and build on multiple OS.
-  - Run simple linters.
-  - Ensure compliance with Conventional Commits 1.0.0.
-- Configure Dependabot:
-  - Periodic update checks.
-  - Automerge updates to `dev` and open PRs for review.
-- Automate PR tagging:
-  - Tag based on modified files and PR size.
-  - Add a greeting comment for PR authors.
-- Automate releases:
-  - Format and define releases based on commit types and PR descriptions.
-- Implement stale PR/issue closer:
-  - Close items after a period of inactivity.
+- **Templates & Workflows**
+  - Create templates for issues, bugs, and feature requests
+  - Set up CI workflows:
+    - Test and build on multiple OS
+    - Run simple linters
+    - Ensure compliance with Conventional Commits 1.0.0
+  - Implement stale PR/issue closer (auto-close after inactivity)
 
-### Secondary GitHub Tasks
-- Configure commit instructions for better commit messages and Copilot usage.
+- **Dependency Management**
+  - Configure Dependabot:
+    - Periodic update checks
+    - Automerge updates to `dev` and open PRs for review
+
+- **PR Automation**
+  - Automate PR tagging based on modified files and PR size
+  - Add greeting comments for PR authors
+  - Automate releases based on commit types and PR descriptions
+
+### Documentation & Code Quality
+- Configure commit instructions for better messages and Copilot usage
 - Set up linters:
-  - Commit message linter.
-  - Code linters for Goland (local) and GH Actions.
+  - Commit message linter
+  - Code linters for Goland (local) and GH Actions
 - Add documentation:
-  - Contribution guide, code of conduct, setup instructions, and development process.
-- Pending tasks:
-  - Translate `pr-template`.
-  - Investigate `renovate.json`.
-  - Update `README.md`.
+  - Contribution guide
+  - Code of conduct
+  - Setup instructions
+  - Development process
 
-### PosPrinter and Daemon Separation
-- Split the repository:
-  - Create a new repo for core logic.
-- Explore implementations:
-  - Daemon listening to WebSocket for print commands.
-  - REST API for protocol-agnostic, lightweight local use.
-- Develop a simple API using Gin:
-  - Prioritize performance and lightweight design.
-- Avoid ticket constructors in Golang:
-  - Use JSON for ticket data.
-  - Translate JSON commands to Golang functions.
-- Research:
-  - JSON ticket representation tools (e.g., Parzibyte).
-  - WebSocket and REST API communication feasibility.
-- Microservices:
-  - Split into at least two services: Printing and Daemon.
-  - Evaluate gRPC for inter-service communication.
-- Containers:
-  - Assess containerization impact on connectors.
+### Pending GitHub Tasks
+- Translate `pr-template`
+- Investigate `renovate.json`
+- Update `README.md`
 
-### Pending Development Tasks
+### Architecture: PosPrinter and Daemon Separation
+- **Repository Structure**
+  - Split repository: create new repo for core logic
+  
+- **Service Implementation**
+  - Explore implementations:
+    - Daemon listening to WebSocket for print commands
+    - REST API for protocol-agnostic, lightweight local use
+  - Develop simple API using Gin (prioritize performance and lightweight design)
+  
+- **Ticket Handling**
+  - Use JSON for ticket data instead of ticket constructors
+  - Translate JSON commands to Golang functions
+  
+- **Research Areas**
+  - JSON ticket representation tools (e.g., Parzibyte)
+  - WebSocket and REST API communication feasibility
+  
+- **Microservices Approach**
+  - Split into at least two services: Printing and Daemon
+  - Evaluate gRPC for inter-service communication
+  - Assess containerization impact on connectors
+
+### Development Tasks
 - Investigate codepage issues:
-  - Suspect printer issues.
-  - Test with a disk reader (possible firmware update).
+  - Suspect printer issues
+  - Test with disk reader (possible firmware update needed)
 - Complete ESCPOS functions:
-  - Integrate documented commands.
-  - Separate responsibilities after removing base commands.
-- Refactor:
-  - Use Copilot for suggestions.
-  - Review all TODOs and FIXMEs in the code.
+  - Integrate documented commands
+  - Separate responsibilities after removing base commands
+- Refactor code:
+  - Use Copilot for suggestions
+  - Review all TODOs and FIXMEs
 
-## 13/08/2025 - 15/08/2025
+## Week of 13/08/2025 - 15/08/2025
 
-## Pending TODOs and FIXMEs
+### Code Review and Refactoring
+- Review all TODOs and FIXMEs in the codebase:
+  - Most relate to unfinished ESCPOS command implementations
+  - Many require specific types to validate inputs
+- Develop testing strategy for commands without physical printer (investigate os.stdout as io.writer)
+- Reduce boilerplate code with middleware approach to commands
+- Ensure proper public/private function declarations
+- Improve modularity and separation of concerns
+- Review architecture differences between protocols (e.g., ESCPOS vs ZPL command equivalents)
 
-- Review all TODOs and FIXMEs in the codebase.
-  - Most of them are related to unfinished ESCPOS command implementations.
-  - Many of them required specific types to validate inputs.
-- I need a plan to test the entire commands without the need of a physical printer, maybe os.stdout io.writer could help.
-- I have to reduce boilerplate code when using the final commands, a nice improvement could be a middleware approach to commands.
-- Making sure every function have it's proper declaration related to being private or public.
-- I worked on codebase fragmentation to improve modularity and separation of concerns. Then, the main core logic to print could be imported from the new repo, making it even more public.
-- I keep reviewing the overall architecture since I didn't realize how different protocols were from each other. So, the same print command can work, but what about CutLabel, since ESCPOS don't have a direct equivalent?
+## Week of 18/08/2025 - 22/08/2025
 
-## 18/08/2025 - 22/08/2025
-- I was pretty stuck with a refactor; I need to separate each module type (ESCPOS, ZPL, etc.). I'm still looking for a faster, easier way to migrate to the new architecture.
-- Implemented better barcode support.
-- Learned more about channels and goroutines in Go.
+### Architecture and Implementation
+- **Module Separation**
+  - Implement separate modules for different protocols (ESCPOS, ZPL, etc.)
+  - Create each protocol module as separate Go package within same repository
+  - Design registry to handle multiple printers and abstract POS concept
+  
+- **Implementation Progress**
+  - Improved barcode support
+  - Started ESCPOS basic commands for text and formatting
+  - Planning second layer for complex logic:
+    - Auto-formatting to active charset for printer code page
+    - Improved error handling with specific error types
+  
+- **Project Management**
+  - Set up PRs and issues in pos-printer repository for tracking
+  - Need to generate documentation for each protocol module
+  - Move diary tasks into GitHub project backlog items
+  - Review GitHub project management best practices
 
-- I researched and evaluated several options; the final decision is to make each protocol module a separate Go package, but keep them all in the same repository. Protocols behave very differently, so this approach should help manage their specificities. The plan is to create a registry to handle multiple printers and abstract the Point-of-Sale (POS) concept.
+### Technical Learning
+- Deepened knowledge of channels and goroutines in Go
+- Learning about stack, heap, and garbage collection in Golang
+- Migrating slowly to Go 1.25
 
-- Set up pull requests and issues in the pos-printer repository; these track the new architecture work.
-- I should generate the necessary documentation for each protocol module.
-- I need to move diary tasks into backlog items in the GitHub project — it's easy to lose track of what's missing.
-- I need to review how GitHub is used for project management in production.
+### Architecture Progress
+- Identified need for two ESCPOS versions: Standard and Page Mode
+  - Can be handled by same codebase with different configurations
+  - Page Mode commands postponed for now
+- Basic commands implemented:
+  - Printing
+  - Line Spacing
 
-- Regarding the new architecture, I started with ESCPOS basic commands for text and formatting. These commands return byte slices and focus on validating input for printers. In a second layer I plan to implement more complex logic: auto-formatting to the active charset corresponding to the printer code page, and improved error handling with specific error types.
+## Week of 25/08/2025 - 29/08/2025
 
-- Learning about stack, heap and garbage collection in Golang. Also migrating to Go 1.25.
-- The new architecture is going well, for now i have visualized that i need 2 version of ESCPOS, Standard and Page Mode, which could be handled by the same codebase with different configurations. Page Mode commands will be ignored for now.
-- Basic commands done:
-  - Printing 
+### Testing and Delivery
+- Implemented robust testing for basic commands:
+  - Unit testing with mocks
+  - Integration testing simulating real ESCPOS printer behavior
+- Planning to replicate testing approach for all commands
+- Investigating PDF/image generation as additional protocol option for receipt delivery
+- Focusing on delivering working prototype ASAP
+- Need to consolidate backlog items from laptop notes to GitHub Project
+- Established weekly policy to push to remote branches with open PRs every Friday
 
-## Extra Notes
-- [Video](https://youtu.be/bi5UxoEVX_E?si=HKV8f-eU13nYogV1) acerca del boot de Puppy Linux. Sirve hasta el minuto 3:45.
-- Tutorial a formatear: [Enlace al tutorial](https://www.geekstogo.com/forum/topic/274691-use-puppy-linux-live-cd-to-recover-your-data/)
-- Books to Look for:
-  - The Art of Concurrency, O'Reilly.
-- Words I heard today: Odoo, Endpoint, Business Logic, Kiosko, MVP, VPS, Hash/MD5/SHA256, clientes pesados, criptografía, paginación, Trello, procesamiento en db de prod, deslindarse inmediatamente, DNS, VMS, Podman y Containers, Exponential Backoff.
+## Learning Resources and Terminology
+
+### Books to Explore
+- The Art of Concurrency, O'Reilly
+
+### Technical Terms and Concepts
+- Odoo, Endpoint, Business Logic, Kiosko, MVP, VPS
+- Hash/MD5/SHA256, cryptography, pagination
+- Trello, production database processing
+- DNS, VMS, Podman and Containers
+- Exponential Backoff, deadlock
