@@ -9,10 +9,11 @@
 - GoLang for Machine Learning, Independently Published
 - System Design Interview Vol. 2, Alex Xu
 
-## Technical Terms To Check (or Explain?)
+## Interesting Technical Terms
 
 - API Endpoint, MVP, VPS, Ping, SMTP
-- Hash/MD5/SHA256, cryptography, pagination
+- Hash/MD5/SHA256, pagination
 - DNS, VMS, Podman and Containers
 - Exponential Backoff, deadlock
-- Dictionary Attack
+- Dictionary Attack, Brute Force Attack
+- cryptography, password hashing
