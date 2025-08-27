@@ -1,6 +1,7 @@
 # Learning Resources and Terminology
 
 ## Books and topics to Explore
+
 - The Art of Concurrency, O'Reilly
 - Docker: Up & Running, O'Reilly
 - Github Actions in Action, O'Reilly
@@ -9,7 +10,9 @@
 - System Design Interview Vol. 2, Alex Xu
 
 ## Technical Terms To Check (or Explain?)
+
 - API Endpoint, MVP, VPS, Ping, SMTP
 - Hash/MD5/SHA256, cryptography, pagination
 - DNS, VMS, Podman and Containers
 - Exponential Backoff, deadlock
+- Dictionary Attack
