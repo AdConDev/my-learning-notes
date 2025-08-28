@@ -1,4 +1,4 @@
-# 📚 The Complete ESC/POS Development Guide
+# 📚 The Complete ESC/POS Development Guide v2.0
 
 *A step-by-step guide for adding new capabilities to the ESC/POS printer library*
 
@@ -6,14 +6,14 @@
 
 ## 🎯 Purpose of This Guide
 
-This guide teaches you how to add new printer capabilities (like barcode printing, image handling, or text formatting) to our ESC/POS library. Even if you're new to Go or testing, you'll be able to follow along and contribute quality code.
+This guide teaches you how to add new printer capabilities to our ESC/POS library following our established architecture. Even if you're new to Go or testing, you'll be able to follow along and contribute quality code.
 
 ## 📖 Table of Contents
 
 1. [Understanding the Architecture](#understanding-the-architecture)
-2. [Before You Start](#before-you-start)
-3. [Complete Tutorial: Adding Barcode Capability](#complete-tutorial-adding-barcode-capability)
-4. [Testing Guide](#testing-guide)
+2. [Project Structure](#project-structure)
+3. [Complete Tutorial: Adding a New Capability](#complete-tutorial-adding-a-new-capability)
+4. [Testing Standards](#testing-standards)
 5. [Common Mistakes and Solutions](#common-mistakes-and-solutions)
 6. [Quick Reference](#quick-reference)
 
@@ -21,191 +21,170 @@ This guide teaches you how to add new printer capabilities (like barcode printin
 
 ## 🏗️ Understanding the Architecture
 
-### What is a "Capability"?
+### Package Organization
 
-A **capability** is a group of related printer commands. Think of it like a toolbox:
-
-- **Print capability**: Tools for printing text
-- **LineSpacing capability**: Tools for controlling line spacing
-- **Barcode capability**: Tools for printing barcodes
-
-### The Three Main Parts
-
-Every capability has three parts:
-
-```
-┌─────────────────┐
-│   INTERFACE     │  ← Defines what methods must exist
-├─────────────────┤
-│ IMPLEMENTATION  │  ← The actual code that does the work
-├─────────────────┤
-│     TESTS       │  ← Verifies everything works correctly
-└─────────────────┘
-```
-
----
-
-## ✅ Before You Start
-
-### Required Knowledge Checklist
-
-Don't worry if you don't know everything - you can learn as you go!
-
-- [ ] **Basic Go syntax** (variables, functions, structs)
-- [ ] **What bytes are** (numbers 0-255 that printers understand)
-- [ ] **How to run tests** (`go test ./...`)
-
-### Tools You Need
-
-```bash
-# Check if Go is installed
-go version
-
-# Your text editor (VS Code recommended)
-code .
-
-# Git for version control
-git --version
-```
-
----
-
-## 🚀 Complete Tutorial: Adding Barcode Capability
-
-Let's add barcode printing step by step. We'll create files, write code, and test everything.
-
-### 📁 Step 1: Plan Your Files
-
-First, understand what files you'll create:
+Our library is organized into modular packages:
 
 ```
 escpos/
-├── barcode.go                    # Main implementation
-├── barcode_test.go              # Unit tests
-├── barcode_mock_test.go         # Mock for testing
-├── barcode_fake_test.go         # Fake with state (if needed)
-└── constants.go                  # Add constants here
+├── common/          # Shared constants, errors, utilities
+├── print/           # Print capability package
+├── lineSpacing/     # Line spacing capability package
+├── barcode/         # Barcode capability package (example)
+└── escpos.go        # Main Commands orchestrator
 ```
 
-### 📝 Step 2: Define Constants and Errors
+### What is a "Capability"?
 
-**File: `constants.go`** (add to existing file)
+A **capability** is a cohesive group of related printer commands, organized as its own package:
+
+- **Print capability**: Commands for printing text and paper control
+- **LineSpacing capability**: Commands for controlling line spacing
+- **Barcode capability**: Commands for printing barcodes
+
+### The Four Main Components
+
+Every capability package contains:
+
+```
+capability/
+├── {capability}.go                    # Interface & implementation
+├── {capability}_test.go               # Unit tests
+├── {capability}_mock_test.go          # Mock implementation
+└── {capability}_fake_test.go          # Stateful fake (if needed)
+```
+
+---
+
+## 📁 Project Structure
+
+### Current Architecture
+
+```
+escpos/
+├── common/                             # Shared utilities
+│   ├── constants.go                   # ESC/POS byte constants
+│   ├── errors.go                       # Common error definitions
+│   ├── config.go                       # Configuration constants
+│   ├── utils.go                        # Utility functions
+│   └── utils_test.go                   # Utility tests
+│
+├── print/                              # Print capability
+│   ├── print.go                        # Interfaces & implementation
+│   ├── print_test.go                   # Unit tests
+│   ├── print_mock_test.go              # Mock & tests
+│   ├── print_fake_test.go              # Fake & tests
+│   └── print_interface_composition_test.go  # Interface tests
+│
+├── lineSpacing/                        # Line spacing capability
+│   ├── line_spacing.go                 # Interface & implementation
+│   ├── line_spacing_test.go            # Unit tests
+│   ├── line_spacing_mock_test.go       # Mock & tests
+│   └── line_spacing_fake_test.go       # Fake & tests
+│
+├── escpos.go                           # Main Commands struct
+├── escpos_test.go                      # Commands unit tests
+└── escpos_integration_test.go          # Cross-capability integration
+```
+
+---
+
+## 🚀 Complete Tutorial: Adding a New Capability
+
+Let's add a barcode printing capability step by step.
+
+### 📝 Step 1: Create the Package Directory
+
+```bash
+mkdir escpos/barcode
+```
+
+### 📋 Step 2: Define Common Elements
+
+**File: `common/barcode_constants.go`** (new file in common package)
 
 ```go
+package common
+
 // ============================================================================
-// BARCODE CONSTANTS
+// Barcode Constants
 // ============================================================================
 
-// BarcodeFormat represents the barcode symbology
+// BarcodeFormat represents barcode symbology types
 type BarcodeFormat byte
 
 const (
-    // Barcode formats that printers understand
-    BarcodeUPCA   BarcodeFormat = 65  // UPC-A: 11-12 digits
-    BarcodeUPCE   BarcodeFormat = 66  // UPC-E: 6 digits
-    BarcodeEAN13  BarcodeFormat = 67  // EAN-13: 12-13 digits
-    BarcodeEAN8   BarcodeFormat = 68  // EAN-8: 7-8 digits
-    BarcodeCode39 BarcodeFormat = 69  // CODE39: variable length
-    BarcodeCode128 BarcodeFormat = 73 // CODE128: variable length
+    BarcodeUPCA    BarcodeFormat = 65  // UPC-A
+    BarcodeUPCE    BarcodeFormat = 66  // UPC-E
+    BarcodeEAN13   BarcodeFormat = 67  // EAN-13
+    BarcodeEAN8    BarcodeFormat = 68  // EAN-8
+    BarcodeCode39  BarcodeFormat = 69  // Code39
+    BarcodeCode128 BarcodeFormat = 73  // Code128
 )
 
-// Maximum values for barcode parameters
 const (
-    MaxBarcodeHeight byte = 255  // Maximum height in dots
-    MaxBarcodeWidth  byte = 6    // Maximum width multiplier
+    MaxBarcodeHeight byte = 255
+    MaxBarcodeWidth  byte = 6
 )
+```
 
-// ============================================================================
-// BARCODE ERRORS
-// ============================================================================
+**File: `common/barcode_errors.go`** (new file in common package)
 
+```go
+package common
+
+import "errors"
+
+// Barcode-related errors
 var (
-    // Error messages that explain what went wrong
-    errBarcodeEmptyData     = errors.New("barcode data cannot be empty")
-    errBarcodeInvalidFormat = errors.New("invalid barcode format")
-    errBarcodeInvalidHeight = errors.New("barcode height exceeds maximum")
-    errBarcodeInvalidWidth  = errors.New("barcode width exceeds maximum")
-    errBarcodeTooLong       = errors.New("barcode data too long for format")
+    ErrBarcodeEmptyData     = errors.New("barcode data cannot be empty")
+    ErrBarcodeInvalidFormat = errors.New("invalid barcode format")
+    ErrBarcodeInvalidWidth  = errors.New("barcode width exceeds maximum (1-6)")
+    ErrBarcodeTooLong       = errors.New("barcode data too long for format")
 )
 ```
 
-**Why we need this:**
+### 🔧 Step 3: Create the Capability Interface and Implementation
 
-- Constants give names to magic numbers
-- Errors help users understand what went wrong
-- Comments explain what each value means
-
-### 🔧 Step 3: Create the Interface
-
-**File: `barcode.go`**
+**File: `barcode/barcode.go`**
 
 ```go
-package escpos
+package barcode
 
-// ============================================================================
-// BARCODE INTERFACE
-// ============================================================================
+import (
+    "errors"
+    "github.com/adcondev/pos-printer/escpos/common"
+)
 
-// BarcodeCapability defines what a barcode printer can do
-// This is like a contract - any barcode implementation must have these methods
-type BarcodeCapability interface {
-    // SetBarcodeHeight sets how tall the barcode will be (in dots)
-    // Example: SetBarcodeHeight(100) makes barcodes 100 dots tall
+// Interface compliance check
+var _ Capability = (*Commands)(nil)
+
+// Capability defines the interface for barcode printing
+type Capability interface {
     SetBarcodeHeight(n byte) []byte
-    
-    // SetBarcodeWidth sets how wide each bar will be (multiplier 1-6)
-    // Example: SetBarcodeWidth(2) makes bars twice as wide
     SetBarcodeWidth(n byte) []byte
-    
-    // PrintBarcode prints actual barcode with given data and format
-    // Example: PrintBarcode("123456789012", BarcodeEAN13)
-    // Returns error if data is invalid for the format
-    PrintBarcode(data string, format BarcodeFormat) ([]byte, error)
-    
-    // SetBarcodeTextPosition sets where human-readable text appears
-    // 0 = no text, 1 = above, 2 = below, 3 = both
     SetBarcodeTextPosition(position byte) []byte
-}
-```
-
-**Understanding interfaces:**
-
-- An interface is like a job description
-- It says "whoever does this job must be able to do X, Y, and Z"
-- We can swap different implementations (real printer, mock, fake)
-
-### 🛠️ Step 4: Implement the Interface
-
-Continue in **`barcode.go`**:
-
-```go
-// ============================================================================
-// BARCODE IMPLEMENTATION
-// ============================================================================
-
-// This line checks at compile time that BarcodeCommands implements BarcodeCapability
-// If we forget a method, Go will tell us immediately
-var _ BarcodeCapability = (*BarcodeCommands)(nil)
-
-// BarcodeCommands implements the BarcodeCapability interface
-// This struct holds the actual code that creates barcode commands
-type BarcodeCommands struct {
-    // Store current settings (optional, for stateful operations)
-    currentHeight   byte
-    currentWidth    byte
-    textPosition    byte
+    PrintBarcode(data string, format common.BarcodeFormat) ([]byte, error)
 }
 
-// NewBarcodeCommands creates a new barcode command generator with defaults
-func NewBarcodeCommands() *BarcodeCommands {
-    return &BarcodeCommands{
-        currentHeight: 100,  // Default height
-        currentWidth:  2,    // Default width
-        textPosition:  2,    // Default: text below
+// Commands implements the Capability interface
+type Commands struct {
+    // Store state if needed
+    currentHeight byte
+    currentWidth  byte
+    textPosition  byte
+}
+
+// NewCommands creates a new barcode command generator
+func NewCommands() *Commands {
+    return &Commands{
+        currentHeight: 100,
+        currentWidth:  2,
+        textPosition:  2,
     }
 }
 
-// SetBarcodeHeight sets the barcode height
+// SetBarcodeHeight sets the barcode height in dots
 //
 // Format:
 //   ASCII: GS h n
@@ -216,23 +195,16 @@ func NewBarcodeCommands() *BarcodeCommands {
 //   n = 1-255 (height in dots)
 //
 // Default:
-//   100 dots (varies by printer model)
-//
-// Description:
-//   Sets the height of the barcode in dots. This affects all subsequent
-//   barcodes until changed or printer is reset.
-//
-// Example:
-//   SetBarcodeHeight(150) // Makes barcodes 150 dots tall
+//   100 dots
 //
 // Byte sequence:
 //   GS h n -> 0x1D, 0x68, n
-func (bc *BarcodeCommands) SetBarcodeHeight(n byte) []byte {
-    // No validation needed - any byte value is valid
-    bc.currentHeight = n  // Remember the setting
-    
-    // Build the command: GS h n
-    return []byte{GS, 'h', n}
+func (c *Commands) SetBarcodeHeight(n byte) []byte {
+    if n == 0 {
+        n = 1  // Minimum height
+    }
+    c.currentHeight = n
+    return []byte{common.GS, 'h', n}
 }
 
 // SetBarcodeWidth sets the barcode width multiplier
@@ -245,29 +217,17 @@ func (bc *BarcodeCommands) SetBarcodeHeight(n byte) []byte {
 // Range:
 //   n = 1-6 (width multiplier)
 //
-// Default:
-//   2 (medium width)
-//
-// Description:
-//   Sets the width of barcode bars. 1 = thinnest, 6 = thickest.
-//   Affects all subsequent barcodes.
-//
-// Example:
-//   SetBarcodeWidth(3) // Makes bars 3x normal width
-//
 // Byte sequence:
 //   GS w n -> 0x1D, 0x77, n
-func (bc *BarcodeCommands) SetBarcodeWidth(n byte) []byte {
-    // Width can only be 1-6
+func (c *Commands) SetBarcodeWidth(n byte) []byte {
     if n < 1 {
         n = 1
     }
-    if n > MaxBarcodeWidth {
-        n = MaxBarcodeWidth
+    if n > common.MaxBarcodeWidth {
+        n = common.MaxBarcodeWidth
     }
-    
-    bc.currentWidth = n
-    return []byte{GS, 'w', n}
+    c.currentWidth = n
+    return []byte{common.GS, 'w', n}
 }
 
 // SetBarcodeTextPosition sets where human-readable text appears
@@ -278,81 +238,62 @@ func (bc *BarcodeCommands) SetBarcodeWidth(n byte) []byte {
 //   Decimal: 29 72 n
 //
 // Range:
-//   n = 0-3
-//   0 = No text
-//   1 = Text above barcode
-//   2 = Text below barcode
-//   3 = Text above and below
-//
-// Default:
-//   0 or 2 (varies by printer)
+//   n = 0-3 (0=none, 1=above, 2=below, 3=both)
 //
 // Byte sequence:
 //   GS H n -> 0x1D, 0x48, n
-func (bc *BarcodeCommands) SetBarcodeTextPosition(position byte) []byte {
-    // Ensure position is 0-3
+func (c *Commands) SetBarcodeTextPosition(position byte) []byte {
     if position > 3 {
         position = 2  // Default to below
     }
-    
-    bc.textPosition = position
-    return []byte{GS, 'H', position}
+    c.textPosition = position
+    return []byte{common.GS, 'H', position}
 }
 
 // PrintBarcode generates the command to print a barcode
 //
 // Format:
-//   ASCII: GS k m d1...dk (where m is format, k is length)
-//   Hex:   0x1D 0x6B m length data...
+//   ASCII: GS k m n d1...dn
+//   Hex:   0x1D 0x6B m n data
 //
 // Parameters:
-//   data - The barcode data (numbers/text depending on format)
-//   format - The barcode type (EAN13, Code128, etc.)
+//   data - The barcode data
+//   format - The barcode type
 //
 // Returns:
-//   Command bytes and error if data is invalid
-//
-// Example:
-//   PrintBarcode("123456789012", BarcodeEAN13)
-func (bc *BarcodeCommands) PrintBarcode(data string, format BarcodeFormat) ([]byte, error) {
-    // Step 1: Validate input
+//   Command bytes or error if invalid
+func (c *Commands) PrintBarcode(data string, format common.BarcodeFormat) ([]byte, error) {
     if len(data) == 0 {
-        return nil, errBarcodeEmptyData
+        return nil, common.ErrBarcodeEmptyData
     }
     
-    // Step 2: Validate data for specific format
     if err := validateBarcodeData(data, format); err != nil {
         return nil, err
     }
     
-    // Step 3: Build command
-    // Command structure: GS k format length data...
     dataBytes := []byte(data)
     length := byte(len(dataBytes))
     
-    // Create the full command
     cmd := make([]byte, 0, 4+len(dataBytes))
-    cmd = append(cmd, GS, 'k', byte(format), length)
+    cmd = append(cmd, common.GS, 'k', byte(format), length)
     cmd = append(cmd, dataBytes...)
     
     return cmd, nil
 }
 
-// validateBarcodeData checks if data is valid for the barcode format
-func validateBarcodeData(data string, format BarcodeFormat) error {
+func validateBarcodeData(data string, format common.BarcodeFormat) error {
     switch format {
-    case BarcodeEAN13:
-        if len(data) != 13 && len(data) != 12 {
+    case common.BarcodeEAN13:
+        if len(data) != 12 && len(data) != 13 {
             return errors.New("EAN-13 requires 12 or 13 digits")
         }
-        // Check if all characters are digits
         for _, ch := range data {
             if ch < '0' || ch > '9' {
                 return errors.New("EAN-13 must contain only digits")
             }
         }
-    case BarcodeEAN8:
-        if len(data) != 8 && len(data) != 7 {
+    case common.BarcodeEAN8:
+        if len(data) != 7 && len(data) != 8 {
             return errors.New("EAN-8 requires 7 or 8 digits")
         }
         for _, ch := range data {
@@ -360,842 +301,803 @@ func validateBarcodeData(data string, format BarcodeFormat) error {
                 return errors.New("EAN-8 must contain only digits")
             }
         }
-    case BarcodeCode128:
-        // Code128 accepts most ASCII characters
-        if len(data) > 253 {  // Typical max length
-            return errBarcodeTooLong
-        }
-    // Add more format validations as needed
-    default:
-        // For unknown formats, accept any reasonable data
+    case common.BarcodeCode128:
         if len(data) > 253 {
-            return errBarcodeTooLong
+            return common.ErrBarcodeTooLong
+        }
+    default:
+        if len(data) > 253 {
+            return common.ErrBarcodeTooLong
         }
     }
     return nil
 }
 ```
 
-**Key points for beginners:**
+### 🧪 Step 4: Create Unit Tests
 
-- Each method has detailed documentation
-- Validation prevents printer errors
-- We store state for complex operations
-- Helper functions keep code clean
-
-### 🧪 Step 5: Create Unit Tests
-
-**File: `barcode_test.go`**
+**File: `barcode/barcode_test.go`**
 
 ```go
-package escpos
+package barcode_test
 
 import (
     "bytes"
     "errors"
     "testing"
+    
+    "github.com/adcondev/pos-printer/escpos/barcode"
+    "github.com/adcondev/pos-printer/escpos/common"
 )
 
-// ============================================================================
-// TEST NAMING CONVENTION: Test{Struct}_{Method}_{Scenario}
-// This makes it clear what we're testing
-// ============================================================================
+// Test naming convention: Test{Struct}_{Method}_{Scenario}
 
-// Test simple command generation (no validation needed)
-func TestBarcodeCommands_SetBarcodeHeight_ByteSequence(t *testing.T) {
-    bc := NewBarcodeCommands()
+func TestCommands_SetBarcodeHeight_ByteSequence(t *testing.T) {
+    cmd := barcode.NewCommands()
     
-    // Table-driven tests let us test multiple cases easily
     tests := []struct {
-        name   string  // Description of the test case
-        height byte    // Input value
-        want   []byte  // Expected output
+        name   string
+        height byte
+        want   []byte
     }{
         {
             name:   "minimum height",
             height: 1,
-            want:   []byte{GS, 'h', 1},
+            want:   []byte{common.GS, 'h', 1},
         },
         {
             name:   "default height",
             height: 100,
-            want:   []byte{GS, 'h', 100},
+            want:   []byte{common.GS, 'h', 100},
         },
         {
-            name:   "maximum height", 
+            name:   "maximum height",
             height: 255,
-            want:   []byte{GS, 'h', 255},
+            want:   []byte{common.GS, 'h', 255},
+        },
+        {
+            name:   "zero becomes minimum",
+            height: 0,
+            want:   []byte{common.GS, 'h', 1},
         },
     }
     
-    // Run each test case
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            got := bc.SetBarcodeHeight(tt.height)
-            
-            // Check if output matches expectation
+            got := cmd.SetBarcodeHeight(tt.height)
             if !bytes.Equal(got, tt.want) {
-                t.Errorf("SetBarcodeHeight(%d) = %#v, want %#v", 
+                t.Errorf("SetBarcodeHeight(%d) = %#v, want %#v",
                     tt.height, got, tt.want)
             }
-            
-            // Also check that state was updated
-            if bc.currentHeight != tt.height {
-                t.Errorf("currentHeight = %d, want %d", 
-                    bc.currentHeight, tt.height)
-            }
         })
     }
 }
 
-// Test width setting with validation
-func TestBarcodeCommands_SetBarcodeWidth_Validation(t *testing.T) {
-    bc := NewBarcodeCommands()
+func TestCommands_SetBarcodeWidth_Validation(t *testing.T) {
+    cmd := barcode.NewCommands()
     
     tests := []struct {
-        name      string
-        width     byte
-        wantCmd   []byte
-        wantState byte  // What width should be stored
+        name  string
+        width byte
+        want  []byte
     }{
         {
-            name:      "minimum width",
-            width:     1,
-            wantCmd:   []byte{GS, 'w', 1},
-            wantState: 1,
+            name:  "minimum width",
+            width: 1,
+            want:  []byte{common.GS, 'w', 1},
         },
         {
-            name:      "maximum width",
-            width:     6,
-            wantCmd:   []byte{GS, 'w', 6},
-            wantState: 6,
+            name:  "maximum width",
+            width: 6,
+            want:  []byte{common.GS, 'w', 6},
         },
         {
-            name:      "width too small (clamped to 1)",
-            width:     0,
-            wantCmd:   []byte{GS, 'w', 1},
-            wantState: 1,
+            name:  "zero becomes minimum",
+            width: 0,
+            want:  []byte{common.GS, 'w', 1},
         },
         {
-            name:      "width too large (clamped to 6)",
-            width:     10,
-            wantCmd:   []byte{GS, 'w', 6},
-            wantState: 6,
+            name:  "over maximum becomes maximum",
+            width: 10,
+            want:  []byte{common.GS, 'w', 6},
         },
     }
     
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            got := bc.SetBarcodeWidth(tt.width)
-            
-            if !bytes.Equal(got, tt.wantCmd) {
+            got := cmd.SetBarcodeWidth(tt.width)
+            if !bytes.Equal(got, tt.want) {
                 t.Errorf("SetBarcodeWidth(%d) = %#v, want %#v",
-                    tt.width, got, tt.wantCmd)
-            }
-            
-            if bc.currentWidth != tt.wantState {
-                t.Errorf("currentWidth = %d, want %d",
-                    bc.currentWidth, tt.wantState)
+                    tt.width, got, tt.want)
             }
         })
     }
 }
 
-// Test barcode printing with various formats
-func TestBarcodeCommands_PrintBarcode_ValidInput(t *testing.T) {
-    bc := NewBarcodeCommands()
+func TestCommands_PrintBarcode_ValidInput(t *testing.T) {
+    cmd := barcode.NewCommands()
     
     tests := []struct {
         name    string
         data    string
-        format  BarcodeFormat
-        want    []byte
+        format  common.BarcodeFormat
         wantErr bool
     }{
         {
-            name:   "valid EAN-13",
-            data:   "123456789012",
-            format: BarcodeEAN13,
-            want: append(
-                []byte{GS, 'k', byte(BarcodeEAN13), 12},
-                []byte("123456789012")...,
-            ),
+            name:    "valid EAN-13",
+            data:    "123456789012",
+            format:  common.BarcodeEAN13,
             wantErr: false,
         },
         {
-            name:   "valid EAN-8",
-            data:   "1234567",
-            format: BarcodeEAN8,
-            want: append(
-                []byte{GS, 'k', byte(BarcodeEAN8), 7},
-                []byte("1234567")...,
-            ),
+            name:    "valid EAN-8",
+            data:    "1234567",
+            format:  common.BarcodeEAN8,
             wantErr: false,
         },
         {
             name:    "empty data",
             data:    "",
-            format:  BarcodeEAN13,
-            want:    nil,
+            format:  common.BarcodeEAN13,
             wantErr: true,
         },
         {
-            name:    "invalid EAN-13 (letters)",
+            name:    "invalid EAN-13 with letters",
             data:    "12345678901A",
-            format:  BarcodeEAN13,
-            want:    nil,
+            format:  common.BarcodeEAN13,
             wantErr: true,
         },
     }
     
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            got, err := bc.PrintBarcode(tt.data, tt.format)
-            
-            // Check error state
+            _, err := cmd.PrintBarcode(tt.data, tt.format)
             if (err != nil) != tt.wantErr {
                 t.Errorf("PrintBarcode(%q, %v) error = %v, wantErr %v",
                     tt.data, tt.format, err, tt.wantErr)
-                return
-            }
-            
-            // If no error expected, check the output
-            if !tt.wantErr && !bytes.Equal(got, tt.want) {
-                t.Errorf("PrintBarcode(%q, %v) = %#v, want %#v",
-                    tt.data, tt.format, got, tt.want)
             }
         })
     }
 }
 
-// Test error conditions specifically
-func TestBarcodeCommands_PrintBarcode_ErrorCases(t *testing.T) {
-    bc := NewBarcodeCommands()
+func TestCommands_PrintBarcode_ErrorCases(t *testing.T) {
+    cmd := barcode.NewCommands()
     
     t.Run("empty data error", func(t *testing.T) {
-        _, err := bc.PrintBarcode("", BarcodeEAN13)
-        if !errors.Is(err, errBarcodeEmptyData) {
+        _, err := cmd.PrintBarcode("", common.BarcodeEAN13)
+        if !errors.Is(err, common.ErrBarcodeEmptyData) {
             t.Errorf("PrintBarcode empty data error = %v, want %v",
-                err, errBarcodeEmptyData)
+                err, common.ErrBarcodeEmptyData)
         }
     })
     
     t.Run("invalid EAN-13 length", func(t *testing.T) {
-        _, err := bc.PrintBarcode("123", BarcodeEAN13)
+        _, err := cmd.PrintBarcode("123", common.BarcodeEAN13)
         if err == nil {
             t.Error("PrintBarcode should error on invalid EAN-13 length")
-        }
-    })
-    
-    t.Run("data too long for Code128", func(t *testing.T) {
-        longData := string(make([]byte, 300))  // Too long
-        _, err := bc.PrintBarcode(longData, BarcodeCode128)
-        if !errors.Is(err, errBarcodeTooLong) {
-            t.Errorf("PrintBarcode long data error = %v, want %v",
-                err, errBarcodeTooLong)
         }
     })
 }
 ```
 
-**Testing tips for beginners:**
+### 🎭 Step 5: Create Mock Implementation
 
-- **Table-driven tests**: Test multiple inputs with one function
-- **Test both success and failure**: Make sure errors work too
-- **Check state changes**: If your code remembers settings, test them
-- **Use descriptive names**: "minimum height" is clearer than "test1"
-
-### 🎭 Step 6: Create Mock Implementation
-
-**File: `barcode_mock_test.go`**
+**File: `barcode/barcode_mock_test.go`**
 
 ```go
-package escpos
+package barcode_test
 
 import (
     "bytes"
     "testing"
+    
+    "github.com/adcondev/pos-printer/escpos/barcode"
+    "github.com/adcondev/pos-printer/escpos/common"
 )
 
 // ============================================================================
-// MOCK IMPLEMENTATION
-// A mock is a fake version used for testing
-// It records what methods were called and with what parameters
+// Mock Implementation
 // ============================================================================
 
-// MockBarcodeCapability is our test double
-type MockBarcodeCapability struct {
-    // For SetBarcodeHeight
-    SetBarcodeHeightCalled bool   // Was the method called?
-    SetBarcodeHeightInput  byte   // What parameter was passed?
-    SetBarcodeHeightReturn []byte // What should we return?
+// MockCapability provides a test double for barcode.Capability
+type MockCapability struct {
+    SetBarcodeHeightCalled bool
+    SetBarcodeHeightInput  byte
+    SetBarcodeHeightReturn []byte
     
-    // For SetBarcodeWidth
     SetBarcodeWidthCalled bool
     SetBarcodeWidthInput  byte
     SetBarcodeWidthReturn []byte
     
-    // For SetBarcodeTextPosition
     SetBarcodeTextPositionCalled bool
     SetBarcodeTextPositionInput  byte
     SetBarcodeTextPositionReturn []byte
     
-    // For PrintBarcode
     PrintBarcodeCalled bool
     PrintBarcodeData   string
-    PrintBarcodeFormat BarcodeFormat
+    PrintBarcodeFormat common.BarcodeFormat
     PrintBarcodeReturn []byte
     PrintBarcodeError  error
 }
 
-// Implement the interface methods
+// Ensure MockCapability implements barcode.Capability
+var _ barcode.Capability = (*MockCapability)(nil)
 
-func (m *MockBarcodeCapability) SetBarcodeHeight(n byte) []byte {
-    // Record that this method was called
+func (m *MockCapability) SetBarcodeHeight(n byte) []byte {
     m.SetBarcodeHeightCalled = true
     m.SetBarcodeHeightInput = n
     
-    // Return configured response or default
     if m.SetBarcodeHeightReturn != nil {
         return m.SetBarcodeHeightReturn
     }
-    return []byte{GS, 'h', n}  // Default behavior
+    return []byte{common.GS, 'h', n}
 }
 
-func (m *MockBarcodeCapability) SetBarcodeWidth(n byte) []byte {
+func (m *MockCapability) SetBarcodeWidth(n byte) []byte {
     m.SetBarcodeWidthCalled = true
     m.SetBarcodeWidthInput = n
     
     if m.SetBarcodeWidthReturn != nil {
         return m.SetBarcodeWidthReturn
     }
-    return []byte{GS, 'w', n}
+    return []byte{common.GS, 'w', n}
 }
 
-func (m *MockBarcodeCapability) SetBarcodeTextPosition(position byte) []byte {
+func (m *MockCapability) SetBarcodeTextPosition(position byte) []byte {
     m.SetBarcodeTextPositionCalled = true
     m.SetBarcodeTextPositionInput = position
     
     if m.SetBarcodeTextPositionReturn != nil {
         return m.SetBarcodeTextPositionReturn
     }
-    return []byte{GS, 'H', position}
+    return []byte{common.GS, 'H', position}
 }
 
-func (m *MockBarcodeCapability) PrintBarcode(data string, format BarcodeFormat) ([]byte, error) {
+func (m *MockCapability) PrintBarcode(data string, format common.BarcodeFormat) ([]byte, error) {
     m.PrintBarcodeCalled = true
     m.PrintBarcodeData = data
     m.PrintBarcodeFormat = format
     
-    // Return configured error if set
     if m.PrintBarcodeError != nil {
         return nil, m.PrintBarcodeError
     }
-    
-    // Return configured response or default
     if m.PrintBarcodeReturn != nil {
         return m.PrintBarcodeReturn, nil
     }
-    
-    // Simple default response
-    return []byte{GS, 'k', byte(format)}, nil
+    return []byte{common.GS, 'k', byte(format)}, nil
 }
 
 // ============================================================================
-// MOCK TESTS
-// These tests verify that our mock works correctly
+// Mock Tests
 // ============================================================================
 
-func TestMockBarcodeCapability_SetBarcodeHeight_Tracking(t *testing.T) {
-    // Create a mock with custom return value
-    mock := &MockBarcodeCapability{
-        SetBarcodeHeightReturn: []byte{0xFF, 0xFE},  // Custom response
-    }
+func TestMockCapability_BehaviorTracking(t *testing.T) {
+    t.Run("tracks SetBarcodeHeight calls", func(t *testing.T) {
+        mock := &MockCapability{
+            SetBarcodeHeightReturn: []byte{0xFF, 0xFE},
+        }
+        
+        result := mock.SetBarcodeHeight(150)
+        
+        if !mock.SetBarcodeHeightCalled {
+            t.Error("SetBarcodeHeight should be marked as called")
+        }
+        if mock.SetBarcodeHeightInput != 150 {
+            t.Errorf("SetBarcodeHeight input = %d, want 150",
+                mock.SetBarcodeHeightInput)
+        }
+        if !bytes.Equal(result, []byte{0xFF, 0xFE}) {
+            t.Errorf("SetBarcodeHeight result = %#v, want %#v",
+                result, []byte{0xFF, 0xFE})
+        }
+    })
     
-    // Call the method
-    height := byte(150)
-    result := mock.SetBarcodeHeight(height)
-    
-    // Verify it was tracked
-    if !mock.SetBarcodeHeightCalled {
-        t.Error("SetBarcodeHeight should be marked as called")
-    }
-    
-    if mock.SetBarcodeHeightInput != height {
-        t.Errorf("SetBarcodeHeight input = %d, want %d",
-            mock.SetBarcodeHeightInput, height)
-    }
-    
-    // Verify custom response
-    expected := []byte{0xFF, 0xFE}
-    if !bytes.Equal(result, expected) {
-        t.Errorf("SetBarcodeHeight result = %#v, want %#v",
-            result, expected)
-    }
-}
-
-func TestMockBarcodeCapability_PrintBarcode_ErrorSimulation(t *testing.T) {
-    // Create mock that simulates an error
-    mock := &MockBarcodeCapability{
-        PrintBarcodeError: errBarcodeEmptyData,
-    }
-    
-    // Try to print
-    _, err := mock.PrintBarcode("123", BarcodeEAN13)
-    
-    // Verify error was returned
-    if !errors.Is(err, errBarcodeEmptyData) {
-        t.Errorf("PrintBarcode error = %v, want %v",
-            err, errBarcodeEmptyData)
-    }
-    
-    // Verify call was tracked
-    if !mock.PrintBarcodeCalled {
-        t.Error("PrintBarcode should be marked as called")
-    }
-}
-
-// Test using mock with Commands struct
-func TestMockBarcodeCapability_Integration_WithCommands(t *testing.T) {
-    // Create mock
-    mock := &MockBarcodeCapability{}
-    
-    // Inject into Commands
-    cmd := &Commands{
-        Print:    &PrintCommands{Page: &PagePrint{}},
-        LineSpace: &LineSpacingCommands{},
-        Barcode:  mock,  // Use our mock
-    }
-    
-    // Use through Commands
-    cmd.Barcode.SetBarcodeHeight(100)
-    cmd.Barcode.SetBarcodeWidth(3)
-    _, _ = cmd.Barcode.PrintBarcode("123456789012", BarcodeEAN13)
-    
-    // Verify all methods were called
-    if !mock.SetBarcodeHeightCalled {
-        t.Error("SetBarcodeHeight was not called")
-    }
-    if !mock.SetBarcodeWidthCalled {
-        t.Error("SetBarcodeWidth was not called")
-    }
-    if !mock.PrintBarcodeCalled {
-        t.Error("PrintBarcode was not called")
-    }
-    
-    // Verify correct parameters
-    if mock.SetBarcodeHeightInput != 100 {
-        t.Errorf("Height = %d, want 100", mock.SetBarcodeHeightInput)
-    }
-    if mock.PrintBarcodeData != "123456789012" {
-        t.Errorf("Barcode data = %q, want %q", 
-            mock.PrintBarcodeData, "123456789012")
-    }
+    t.Run("simulates PrintBarcode error", func(t *testing.T) {
+        mock := &MockCapability{
+            PrintBarcodeError: common.ErrBarcodeEmptyData,
+        }
+        
+        _, err := mock.PrintBarcode("123", common.BarcodeEAN13)
+        
+        if err != common.ErrBarcodeEmptyData {
+            t.Errorf("PrintBarcode error = %v, want %v",
+                err, common.ErrBarcodeEmptyData)
+        }
+        if !mock.PrintBarcodeCalled {
+            t.Error("PrintBarcode should be marked as called")
+        }
+    })
 }
 ```
 
-**Why mocks are useful:**
+### 🔧 Step 6: Create Fake Implementation (Optional - for stateful testing)
 
-- Test without real hardware
-- Simulate errors easily
-- Verify methods are called correctly
-- Test integration with other components
+**File: `barcode/barcode_fake_test.go`**
+
+```go
+package barcode_test
+
+import (
+    "bytes"
+    "testing"
+    
+    "github.com/adcondev/pos-printer/escpos/barcode"
+    "github.com/adcondev/pos-printer/escpos/common"
+)
+
+// ============================================================================
+// Fake Implementation
+// ============================================================================
+
+// FakeCapability simulates barcode printing with state tracking
+type FakeCapability struct {
+    buffer         []byte
+    currentHeight  byte
+    currentWidth   byte
+    textPosition   byte
+    barcodesPrinted int
+    lastCommand    string
+}
+
+// NewFakeCapability creates a new fake barcode capability
+func NewFakeCapability() *FakeCapability {
+    return &FakeCapability{
+        buffer:        make([]byte, 0),
+        currentHeight: 100,
+        currentWidth:  2,
+        textPosition:  2,
+    }
+}
+
+// Ensure FakeCapability implements barcode.Capability
+var _ barcode.Capability = (*FakeCapability)(nil)
+
+func (f *FakeCapability) SetBarcodeHeight(n byte) []byte {
+    if n == 0 {
+        n = 1
+    }
+    cmd := []byte{common.GS, 'h', n}
+    f.buffer = append(f.buffer, cmd...)
+    f.currentHeight = n
+    f.lastCommand = "SetBarcodeHeight"
+    return cmd
+}
+
+func (f *FakeCapability) SetBarcodeWidth(n byte) []byte {
+    if n < 1 {
+        n = 1
+    }
+    if n > 6 {
+        n = 6
+    }
+    cmd := []byte{common.GS, 'w', n}
+    f.buffer = append(f.buffer, cmd...)
+    f.currentWidth = n
+    f.lastCommand = "SetBarcodeWidth"
+    return cmd
+}
+
+func (f *FakeCapability) SetBarcodeTextPosition(position byte) []byte {
+    if position > 3 {
+        position = 2
+    }
+    cmd := []byte{common.GS, 'H', position}
+    f.buffer = append(f.buffer, cmd...)
+    f.textPosition = position
+    f.lastCommand = "SetBarcodeTextPosition"
+    return cmd
+}
+
+func (f *FakeCapability) PrintBarcode(data string, format common.BarcodeFormat) ([]byte, error) {
+    if len(data) == 0 {
+        return nil, common.ErrBarcodeEmptyData
+    }
+    
+    dataBytes := []byte(data)
+    length := byte(len(dataBytes))
+    
+    cmd := make([]byte, 0, 4+len(dataBytes))
+    cmd = append(cmd, common.GS, 'k', byte(format), length)
+    cmd = append(cmd, dataBytes...)
+    
+    f.buffer = append(f.buffer, cmd...)
+    f.barcodesPrinted++
+    f.lastCommand = "PrintBarcode"
+    
+    return cmd, nil
+}
+
+// Helper methods
+func (f *FakeCapability) GetBuffer() []byte {
+    return f.buffer
+}
+
+func (f *FakeCapability) GetCurrentHeight() byte {
+    return f.currentHeight
+}
+
+func (f *FakeCapability) GetBarcodesPrinted() int {
+    return f.barcodesPrinted
+}
+
+func (f *FakeCapability) Reset() {
+    f.buffer = make([]byte, 0)
+    f.currentHeight = 100
+    f.currentWidth = 2
+    f.textPosition = 2
+    f.barcodesPrinted = 0
+    f.lastCommand = ""
+}
+
+// ============================================================================
+// Fake Tests
+// ============================================================================
+
+func TestFakeCapability_StateTracking(t *testing.T) {
+    t.Run("tracks height changes", func(t *testing.T) {
+        fake := NewFakeCapability()
+        
+        fake.SetBarcodeHeight(150)
+        
+        if fake.GetCurrentHeight() != 150 {
+            t.Errorf("CurrentHeight = %d, want 150", fake.GetCurrentHeight())
+        }
+        if fake.lastCommand != "SetBarcodeHeight" {
+            t.Errorf("LastCommand = %q, want %q", fake.lastCommand, "SetBarcodeHeight")
+        }
+    })
+    
+    t.Run("counts barcodes printed", func(t *testing.T) {
+        fake := NewFakeCapability()
+        
+        _, _ = fake.PrintBarcode("123456789012", common.BarcodeEAN13)
+        _, _ = fake.PrintBarcode("1234567", common.BarcodeEAN8)
+        
+        if fake.GetBarcodesPrinted() != 2 {
+            t.Errorf("BarcodesPrinted = %d, want 2", fake.GetBarcodesPrinted())
+        }
+    })
+    
+    t.Run("accumulates buffer", func(t *testing.T) {
+        fake := NewFakeCapability()
+        
+        fake.SetBarcodeHeight(100)
+        fake.SetBarcodeWidth(3)
+        _, _ = fake.PrintBarcode("123", common.BarcodeCode39)
+        
+        buffer := fake.GetBuffer()
+        
+        // Check that all commands are in the buffer
+        if !bytes.Contains(buffer, []byte{common.GS, 'h', 100}) {
+            t.Error("Buffer should contain height command")
+        }
+        if !bytes.Contains(buffer, []byte{common.GS, 'w', 3}) {
+            t.Error("Buffer should contain width command")
+        }
+        if !bytes.Contains(buffer, []byte{common.GS, 'k'}) {
+            t.Error("Buffer should contain print command")
+        }
+    })
+}
+```
 
 ### 🔄 Step 7: Update Main Commands Structure
 
-**File: `escpos.go`** (update existing file)
+**File: `escpos/escpos.go`**
 
 ```go
 package escpos
 
+import (
+    "github.com/adcondev/pos-printer/escpos/barcode"
+    "github.com/adcondev/pos-printer/escpos/common"
+    "github.com/adcondev/pos-printer/escpos/lineSpacing"
+    "github.com/adcondev/pos-printer/escpos/print"
+)
+
 // Commands implements the ESC/POS Protocol
-// This is the main entry point for all printer capabilities
 type Commands struct {
-    Print     PrinterCapability
-    LineSpace LineSpacingCapability
-    Barcode   BarcodeCapability  // ADD THIS LINE
+    Print     print.Capability
+    LineSpace lineSpacing.Capability
+    Barcode   barcode.Capability  // ADD THIS
 }
 
-// NewESCPOSProtocol creates a new instance of the ESC/POS protocol
-func NewESCPOSProtocol() *Commands {
+// Raw sends raw data without processing
+func (c *Commands) Raw(n string) ([]byte, error) {
+    if err := common.IsBufOk([]byte(n)); err != nil {
+        return nil, err
+    }
+    return []byte(n), nil
+}
+
+// NewEscposProtocol creates a new instance with all capabilities
+func NewEscposProtocol() *Commands {
     return &Commands{
-        Print: &PrintCommands{
-            Page: &PagePrint{},
+        Print: &print.Commands{
+            Page: &print.PagePrint{},
         },
-        LineSpace: &LineSpacingCommands{},
-        Barcode:   NewBarcodeCommands(),  // ADD THIS LINE
+        LineSpace: &lineSpacing.Commands{},
+        Barcode:   barcode.NewCommands(),  // ADD THIS
     }
 }
 ```
 
 ### ✅ Step 8: Add Integration Tests
 
-**File: `escpos_test.go`** (update existing file)
+**File: `escpos/escpos_integration_test.go`** (add to existing)
 
 ```go
-// Add this test to verify barcode is initialized
-func TestNewESCPOSProtocol_BarcodeInitialization(t *testing.T) {
-    cmd := NewESCPOSProtocol()
+func TestIntegration_BarcodePrinting(t *testing.T) {
+    cmd := escpos.NewEscposProtocol()
     
-    // Check barcode capability exists
-    if cmd.Barcode == nil {
-        t.Fatal("NewESCPOSProtocol() Barcode capability should not be nil")
-    }
-    
-    // Verify correct type
-    bc, ok := cmd.Barcode.(*BarcodeCommands)
-    if !ok {
-        t.Error("Barcode should be of type *BarcodeCommands")
-    }
-    
-    // Verify defaults are set
-    if bc.currentHeight != 100 {
-        t.Errorf("Default height = %d, want 100", bc.currentHeight)
-    }
-}
-
-// Integration test: Full barcode printing workflow
-func TestCommands_Integration_BarcodePrinting(t *testing.T) {
-    cmd := NewESCPOSProtocol()
-    
-    // Set up barcode parameters
+    // Configure barcode
     heightCmd := cmd.Barcode.SetBarcodeHeight(150)
     if len(heightCmd) != 3 {
-        t.Errorf("SetBarcodeHeight command length = %d, want 3", 
-            len(heightCmd))
+        t.Errorf("SetBarcodeHeight command length = %d, want 3", len(heightCmd))
     }
     
     widthCmd := cmd.Barcode.SetBarcodeWidth(3)
     if len(widthCmd) != 3 {
-        t.Errorf("SetBarcodeWidth command length = %d, want 3", 
-            len(widthCmd))
+        t.Errorf("SetBarcodeWidth command length = %d, want 3", len(widthCmd))
     }
     
     // Print barcode
-    barcodeCmd, err := cmd.Barcode.PrintBarcode("123456789012", BarcodeEAN13)
+    barcodeCmd, err := cmd.Barcode.PrintBarcode("123456789012", common.BarcodeEAN13)
     if err != nil {
         t.Fatalf("PrintBarcode unexpected error: %v", err)
     }
     
-    // Verify command structure
-    if barcodeCmd[0] != GS || barcodeCmd[1] != 'k' {
+    // Verify structure
+    if barcodeCmd[0] != common.GS || barcodeCmd[1] != 'k' {
         t.Error("Barcode command should start with GS k")
     }
 }
 ```
 
-### 📊 Step 9: Create a Complete Example
-
-**File: `examples/barcode_example.go`** (new file)
-
-```go
-package main
-
-import (
-    "fmt"
-    "log"
-    
-    "github.com/yourusername/escpos"
-)
-
-// This example shows how to use the barcode capability
-func main() {
-    // Create the ESC/POS command generator
-    cmd := escpos.NewESCPOSProtocol()
-    
-    // Configure barcode appearance
-    heightCmd := cmd.Barcode.SetBarcodeHeight(100)
-    fmt.Printf("Set height command: %#v\n", heightCmd)
-    
-    widthCmd := cmd.Barcode.SetBarcodeWidth(2)
-    fmt.Printf("Set width command: %#v\n", widthCmd)
-    
-    textPosCmd := cmd.Barcode.SetBarcodeTextPosition(2)  // Text below
-    fmt.Printf("Set text position command: %#v\n", textPosCmd)
-    
-    // Print different barcode types
-    examples := []struct {
-        name   string
-        data   string
-        format escpos.BarcodeFormat
-    }{
-        {"EAN-13", "123456789012", escpos.BarcodeEAN13},
-        {"EAN-8", "1234567", escpos.BarcodeEAN8},
-        {"Code 128", "HELLO123", escpos.BarcodeCode128},
-    }
-    
-    for _, ex := range examples {
-        barcodeCmd, err := cmd.Barcode.PrintBarcode(ex.data, ex.format)
-        if err != nil {
-            log.Printf("Error printing %s: %v", ex.name, err)
-            continue
-        }
-        
-        fmt.Printf("%s barcode command (%d bytes): %#v\n", 
-            ex.name, len(barcodeCmd), barcodeCmd)
-    }
-    
-    // In real usage, you would send these commands to a printer:
-    // connector.Write(heightCmd)
-    // connector.Write(widthCmd)
-    // connector.Write(textPosCmd)
-    // connector.Write(barcodeCmd)
-}
-```
-
 ---
 
-## 🧪 Testing Guide
+## 🧪 Testing Standards
 
-### Understanding Test Types
+### Test Package Naming
 
-| Test Type | Purpose | When to Create | Example |
-|-----------|---------|----------------|---------|
-| **Unit Test** | Tests individual methods | Always | Does `SetHeight(100)` return correct bytes? |
-| **Mock Test** | Simulates behavior for testing | Always | Pretend to be a printer, record what happens |
-| **Fake Test** | Maintains state across calls | When tracking state | Remember all barcodes printed in a session |
-| **Integration Test** | Tests components together | Always | Does barcode work with Commands? |
+Always use `package {capability}_test` for test files:
 
-### Running Your Tests
+- Ensures you test only the public API
+- Catches accidental exports of internal functions
+- Makes tests more realistic
 
-```bash
-# Run all tests
-go test ./...
+### Test File Organization
 
-# Run with coverage
-go test -cover ./...
+Each capability package must have:
 
-# Run specific test
-go test -run TestBarcodeCommands_SetBarcodeHeight
+| File | Purpose | Required |
+|------|---------|----------|
+| `{capability}_test.go` | Unit tests | ✅ Always |
+| `{capability}_mock_test.go` | Mock implementation | ✅ Always |
+| `{capability}_fake_test.go` | Stateful fake | ⚠️ If stateful |
+| `{capability}_interface_composition_test.go` | Interface tests | ⚠️ If composite |
 
-# Run with verbose output
-go test -v ./...
+### Test Naming Convention
+
+```go
+Test{Struct}_{Method}_{Scenario}
 ```
 
-### Test Checklist
+Examples:
 
-Before considering your capability complete:
+- `TestCommands_SetBarcodeHeight_ByteSequence`
+- `TestCommands_PrintBarcode_ErrorCases`
+- `TestMockCapability_BehaviorTracking`
+- `TestFakeCapability_StateTracking`
 
-- [ ] **Unit tests** cover all methods
-- [ ] **Error cases** are tested
-- [ ] **Edge cases** (min/max values) are tested
-- [ ] **Mock** can simulate all behaviors
-- [ ] **Integration** with Commands works
-- [ ] **Examples** show real usage
+### Mock vs Fake Guidelines
+
+**Use Mocks when:**
+
+- Verifying method calls
+- Simulating specific returns
+- Testing error conditions
+- Simple behavior verification
+
+**Use Fakes when:**
+
+- Tracking state changes
+- Simulating realistic behavior
+- Testing complex workflows
+- Verifying accumulated results
+
+### Interface Compliance
+
+Always include compliance checks:
+
+```go
+// In implementation file
+var _ Capability = (*Commands)(nil)
+
+// In mock test file
+var _ barcode.Capability = (*MockCapability)(nil)
+
+// In fake test file
+var _ barcode.Capability = (*FakeCapability)(nil)
+```
 
 ---
 
 ## ⚠️ Common Mistakes and Solutions
 
-### Mistake 1: Forgetting Interface Compliance Check
+### Mistake 1: Wrong Package for Tests
 
 ❌ **Wrong:**
-
 ```go
-type BarcodeCommands struct {
+package barcode  // Same as implementation
+```
+
+✅ **Correct:**
+```go
+package barcode_test  // _test suffix
+```
+
+### Mistake 2: Missing Interface Compliance
+
+❌ **Wrong:**
+```go
+type Commands struct {
     // ...
 }
 ```
 
 ✅ **Correct:**
-
 ```go
-var _ BarcodeCapability = (*BarcodeCommands)(nil)
+var _ Capability = (*Commands)(nil)
 
-type BarcodeCommands struct {
+type Commands struct {
     // ...
 }
 ```
 
-**Why:** This line makes Go check at compile time that your struct implements the interface.
-
-### Mistake 2: Not Validating Input
+### Mistake 3: Duplicate Compliance Checks
 
 ❌ **Wrong:**
-
 ```go
-func (bc *BarcodeCommands) SetBarcodeWidth(n byte) []byte {
-    return []byte{GS, 'w', n}  // What if n > 6?
-}
+var _ Capability = (*MockCapability)(nil)
+// ... some code ...
+var _ Capability = (*MockCapability)(nil)  // Duplicate!
 ```
 
 ✅ **Correct:**
-
 ```go
-func (bc *BarcodeCommands) SetBarcodeWidth(n byte) []byte {
-    if n > MaxBarcodeWidth {
-        n = MaxBarcodeWidth  // Clamp to maximum
-    }
-    return []byte{GS, 'w', n}
-}
+var _ Capability = (*MockCapability)(nil)  // Only once
 ```
 
-**Why:** Invalid values can cause printer errors or unexpected behavior.
-
-### Mistake 3: Incomplete Error Messages
+### Mistake 4: Tests in Wrong Location
 
 ❌ **Wrong:**
-
-```go
-return nil, errors.New("error")
+```
+escpos/
+├── barcode.go
+├── barcode_test.go       # Wrong location
+└── barcode/
+    └── barcode_mock.go   # Split files
 ```
 
 ✅ **Correct:**
-
-```go
-return nil, fmt.Errorf("EAN-13 requires 12-13 digits, got %d", len(data))
 ```
-
-**Why:** Specific error messages help users fix problems quickly.
-
-### Mistake 4: Missing Documentation
-
-❌ **Wrong:**
-
-```go
-func (bc *BarcodeCommands) PrintBarcode(data string, format BarcodeFormat) ([]byte, error) {
-    // code...
-}
+escpos/
+└── barcode/
+    ├── barcode.go
+    ├── barcode_test.go
+    └── barcode_mock_test.go
 ```
-
-✅ **Correct:**
-
-```go
-// PrintBarcode generates the command to print a barcode
-// 
-// Parameters:
-//   data - The barcode data (e.g., "123456789012")
-//   format - The barcode type (e.g., BarcodeEAN13)
-//
-// Returns:
-//   Command bytes to send to printer, or error if invalid
-//
-// Example:
-//   cmd, err := bc.PrintBarcode("123456789012", BarcodeEAN13)
-func (bc *BarcodeCommands) PrintBarcode(data string, format BarcodeFormat) ([]byte, error) {
-    // code...
-}
-```
-
-**Why:** Future developers (including you) need to understand what the code does.
 
 ---
 
 ## 📚 Quick Reference
 
-### File Naming Convention
+### Directory Structure for New Capability
 
 ```
-{capability}.go                    → Implementation
-{capability}_test.go              → Unit tests
-{capability}_mock_test.go         → Mock for testing
-{capability}_fake_test.go         → Stateful fake (optional)
-{capability}_integration_test.go  → Integration tests (optional)
+escpos/
+└── {capability}/
+    ├── {capability}.go                    # Interface & implementation
+    ├── {capability}_test.go               # Unit tests
+    ├── {capability}_mock_test.go          # Mock & tests
+    └── {capability}_fake_test.go          # Fake & tests (optional)
 ```
 
-### Code Structure Pattern
+### Implementation Template
 
 ```go
-// 1. Interface definition
-type {Capability}Capability interface {
-    Method1() []byte
-    Method2() ([]byte, error)
+package {capability}
+
+import "github.com/adcondev/pos-printer/escpos/common"
+
+// Interface compliance
+var _ Capability = (*Commands)(nil)
+
+// Capability interface
+type Capability interface {
+    Method1(param byte) []byte
+    Method2(param string) ([]byte, error)
 }
 
-// 2. Compliance check
-var _ {Capability}Capability = (*{Capability}Commands)(nil)
-
-// 3. Implementation
-type {Capability}Commands struct {
-    // fields if needed
+// Commands implementation
+type Commands struct {
+    // state fields if needed
 }
 
-// 4. Constructor (if needed)
-func New{Capability}Commands() *{Capability}Commands {
-    return &{Capability}Commands{
-        // initialize fields
+// NewCommands constructor
+func NewCommands() *Commands {
+    return &Commands{
+        // initialize
     }
 }
 
-// 5. Methods
-func (c *{Capability}Commands) Method1() []byte {
-    return []byte{/* command */}
+// Method implementations
+func (c *Commands) Method1(param byte) []byte {
+    return []byte{common.ESC, 'X', param}
 }
 ```
 
-### Test Naming Pattern
+### Mock Template
 
 ```go
-// Format: Test{Struct}_{Method}_{Scenario}
+package {capability}_test
 
-TestBarcodeCommands_SetHeight_ValidInput       // Normal operation
-TestBarcodeCommands_SetHeight_EdgeCases        // Min/max values
-TestBarcodeCommands_PrintBarcode_ErrorCases    // Error conditions
-TestMockBarcode_Integration_WithCommands       // Integration test
-```
+import "github.com/adcondev/pos-printer/escpos/{capability}"
 
-### Command Documentation Template
+// MockCapability test double
+type MockCapability struct {
+    Method1Called bool
+    Method1Input  byte
+    Method1Return []byte
+}
 
-```go
-// MethodName does X
-//
-// Format:
-//   ASCII: ESC X n
-//   Hex:   0x1B 0x58 n
-//   Decimal: 27 88 n
-//
-// Range:
-//   n = 0-255
-//
-// Default:
-//   100
-//
-// Description:
-//   Detailed explanation of what this command does
-//
-// Example:
-//   MethodName(50)  // Does X with value 50
-//
-// Byte sequence:
-//   ESC X n -> 0x1B, 0x58, n
-func (c *Commands) MethodName(n byte) []byte {
-    return []byte{ESC, 'X', n}
+// Interface compliance
+var _ {capability}.Capability = (*MockCapability)(nil)
+
+// Method implementations
+func (m *MockCapability) Method1(param byte) []byte {
+    m.Method1Called = true
+    m.Method1Input = param
+    if m.Method1Return != nil {
+        return m.Method1Return
+    }
+    return []byte{0x1B, 'X', param}
 }
 ```
 
----
+### Integration Checklist
 
-## 🎓 Learning Resources
+When adding a new capability:
 
-### For Go Beginners
-
-1. **Go Tour**: <https://tour.golang.org/>
-2. **Go by Example**: <https://gobyexample.com/>
-3. **Effective Go**: <https://golang.org/doc/effective_go>
-
-### For Testing
-
-1. **Go Testing Package**: <https://pkg.go.dev/testing>
-2. **Table-Driven Tests**: Search for "golang table driven tests"
-3. **Testify (helpful library)**: <https://github.com/stretchr/testify>
-
-### ESC/POS Resources
-
-1. **ESC/POS Command Reference**: Search for "EPSON ESC/POS command reference"
-2. **Printer manuals**: Check your printer manufacturer's documentation
+- [ ] Create package directory
+- [ ] Add constants to `common/`
+- [ ] Add errors to `common/`
+- [ ] Create interface and implementation
+- [ ] Add compliance check
+- [ ] Create unit tests with `_test` package
+- [ ] Create mock with compliance check
+- [ ] Create fake if stateful
+- [ ] Update `escpos.Commands` struct
+- [ ] Update `NewEscposProtocol()`
+- [ ] Add integration tests
+- [ ] Run all tests
+- [ ] Update documentation
 
 ---
 
 ## 💡 Final Tips
 
-1. **Start small**: Implement one method at a time
-2. **Test as you go**: Write tests immediately after each method
-3. **Use examples**: Look at existing code (Print, LineSpacing) for patterns
-4. **Ask for help**: Comment your code with questions if unsure
-5. **Iterate**: Your first version doesn't need to be perfect
+1. **Package organization**: Keep each capability in its own package
+2. **Test package naming**: Always use `package {name}_test`
+3. **Compliance checks**: Add them once, at the top
+4. **State management**: Use fakes when you need to track state
+5. **Documentation**: Every exported function needs comments
+6. **Validation**: Always validate inputs to prevent printer errors
+7. **Examples**: Create example files to show usage
 
-Remember: Good tests and documentation are as important as the code itself. They ensure your work can be understood, maintained, and extended by others (including future you).
+Remember: The structure is designed for clarity and maintainability. Following these patterns ensures anyone can understand and extend your code.
 
 ---
 
-*This guide was created for the ESC/POS library by [@adcondev](https://github.com/adcondev) on 2025-08-27*
+*This guide was created for the ESC/POS library by @adcondev on 2025-07-07*
