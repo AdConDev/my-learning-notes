@@ -172,3 +172,7 @@
 - Simulates error conditions
 
 - I keep working on the tests, as they needed simple fixes and better structure, and I want to ensure they are comprehensive and maintainable, plus I made a guide so whoever continues can follow it easily.
+
+- I have been working in Character and Position commands, just declaring base commands and interfaces for now. I advanced heavy on them but some refactoring is still needed.
+- I have refactored some methods and tests of Printing commands.
+- I reviewed topics like Backpressure and Exponential Backoff and created simple examples.
