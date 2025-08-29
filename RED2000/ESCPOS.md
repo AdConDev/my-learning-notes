@@ -1,4 +1,26 @@
-# 📚 The Complete ESC/POS Development Guide v2.0
+# 📚 The Complete ESC/POS Development Guide v2.1
+
+<div align="center">
+
+```text
+                    🖨️  ESC/POS MASTERY GUIDE  🖨️                     
+                                                                              
+  📍 Author: @adcondev                    🏢 Organization: RED 2000           
+  📅 Created: July 7, 2025               🔄 Version: 2.1                     
+  💻 Environment: Go 1.24.6              🎯 Target: Thermal Printers         
+  🌟 Expertise Level: Intermediate       📖 Guide Type: Step-by-Step          
+                                                                              
+  🚀 "Turning complex printer protocols into simple, testable Go code"        
+
+```
+
+**🔧 Tech Stack:** `Go` • `ESC/POS Protocol` • `Unit Testing` • `Mock/Fake Patterns`
+
+**📋 What You'll Learn:** Interface Design • Package Architecture • Test-Driven Development • Printer Communication
+
+---
+
+</div>
 
 *A step-by-step guide for adding new capabilities to the ESC/POS printer library*
 
@@ -146,173 +168,77 @@ var (
 
 ### 🔧 Step 3: Create the Capability Interface and Implementation
 
-**File: `barcode/barcode.go`**
+When creating a capability, consider whether you need sub-structs or interface composition:
+
+**Simple Capability (like linespacing):**
+
+- Single interface
+- Single implementation struct
+- Direct methods
+
+**Complex Capability with Sub-components (like print):**
+
+- Main interface for common operations
+- Sub-structs for grouped functionality (e.g., PagePrint for page-mode operations)
+- Expose sub-structs directly on main struct (no nested interfaces)
+
+Example of complex capability structure:
 
 ```go
-package barcode
-
-import (
-    "errors"
-    "github.com/adcondev/pos-printer/escpos/common"
-)
-
-// Interface compliance check
-var _ Capability = (*Commands)(nil)
-
-// Capability defines the interface for barcode printing
+// Main interface - only the commonly used methods
 type Capability interface {
-    SetBarcodeHeight(n byte) []byte
-    SetBarcodeWidth(n byte) []byte
-    SetBarcodeTextPosition(position byte) []byte
-    PrintBarcode(data string, format common.BarcodeFormat) ([]byte, error)
+    Text(text string) ([]byte, error)
+    PrintAndFeedPaper(units byte) []byte
+    FormFeed() []byte
+    PrintAndCarriageReturn() []byte
+    PrintAndLineFeed() []byte
 }
 
-// Commands implements the Capability interface
+// Main implementation with sub-components
 type Commands struct {
-    // Store state if needed
-    currentHeight byte
-    currentWidth  byte
-    textPosition  byte
+    Page *PagePrint  // Direct struct, not interface
 }
 
-// NewCommands creates a new barcode command generator
-func NewCommands() *Commands {
-    return &Commands{
-        currentHeight: 100,
-        currentWidth:  2,
-        textPosition:  2,
-    }
-}
+// Sub-component for page mode operations
+type PagePrint struct{}
 
-// SetBarcodeHeight sets the barcode height in dots
-//
-// Format:
-//   ASCII: GS h n
-//   Hex:   0x1D 0x68 n
-//   Decimal: 29 104 n
-//
-// Range:
-//   n = 1-255 (height in dots)
-//
-// Default:
-//   100 dots
-//
-// Byte sequence:
-//   GS h n -> 0x1D, 0x68, n
-func (c *Commands) SetBarcodeHeight(n byte) []byte {
-    if n == 0 {
-        n = 1  // Minimum height
-    }
-    c.currentHeight = n
-    return []byte{common.GS, 'h', n}
-}
-
-// SetBarcodeWidth sets the barcode width multiplier
-//
-// Format:
-//   ASCII: GS w n
-//   Hex:   0x1D 0x77 n
-//   Decimal: 29 119 n
-//
-// Range:
-//   n = 1-6 (width multiplier)
-//
-// Byte sequence:
-//   GS w n -> 0x1D, 0x77, n
-func (c *Commands) SetBarcodeWidth(n byte) []byte {
-    if n < 1 {
-        n = 1
-    }
-    if n > common.MaxBarcodeWidth {
-        n = common.MaxBarcodeWidth
-    }
-    c.currentWidth = n
-    return []byte{common.GS, 'w', n}
-}
-
-// SetBarcodeTextPosition sets where human-readable text appears
-//
-// Format:
-//   ASCII: GS H n
-//   Hex:   0x1D 0x48 n
-//   Decimal: 29 72 n
-//
-// Range:
-//   n = 0-3 (0=none, 1=above, 2=below, 3=both)
-//
-// Byte sequence:
-//   GS H n -> 0x1D, 0x48, n
-func (c *Commands) SetBarcodeTextPosition(position byte) []byte {
-    if position > 3 {
-        position = 2  // Default to below
-    }
-    c.textPosition = position
-    return []byte{common.GS, 'H', position}
-}
-
-// PrintBarcode generates the command to print a barcode
-//
-// Format:
-//   ASCII: GS k m n d1...dn
-//   Hex:   0x1D 0x6B m n data
-//
-// Parameters:
-//   data - The barcode data
-//   format - The barcode type
-//
-// Returns:
-//   Command bytes or error if invalid
-func (c *Commands) PrintBarcode(data string, format common.BarcodeFormat) ([]byte, error) {
-    if len(data) == 0 {
-        return nil, common.ErrBarcodeEmptyData
-    }
-    
-    if err := validateBarcodeData(data, format); err != nil {
-        return nil, err
-    }
-    
-    dataBytes := []byte(data)
-    length := byte(len(dataBytes))
-    
-    cmd := make([]byte, 0, 4+len(dataBytes))
-    cmd = append(cmd, common.GS, 'k', byte(format), length)
-    cmd = append(cmd, dataBytes...)
-    
-    return cmd, nil
-}
-
-func validateBarcodeData(data string, format common.BarcodeFormat) error {
-    switch format {
-    case common.BarcodeEAN13:
-        if len(data) != 12 && len(data) != 13 {
-            return errors.New("EAN-13 requires 12 or 13 digits")
-        }
-        for _, ch := range data {
-            if ch < '0' || ch > '9' {
-                return errors.New("EAN-13 must contain only digits")
-            }
-        }
-    case common.BarcodeEAN8:
-        if len(data) != 7 && len(data) != 8 {
-            return errors.New("EAN-8 requires 7 or 8 digits")
-        }
-        for _, ch := range data {
-            if ch < '0' || ch > '9' {
-                return errors.New("EAN-8 must contain only digits")
-            }
-        }
-    case common.BarcodeCode128:
-        if len(data) > 253 {
-            return common.ErrBarcodeTooLong
-        }
-    default:
-        if len(data) > 253 {
-            return common.ErrBarcodeTooLong
-        }
-    }
-    return nil
-}
+// Methods on sub-component
+func (pp *PagePrint) PrintDataInPageMode() []byte { ... }
+func (pp *PagePrint) PrintAndReverseFeed(units byte) ([]byte, error) { ... }
 ```
+
+Usage:
+
+```go
+cmd := print.NewCommands()
+cmd.Text("Hello")                        // Main capability method
+cmd.Page.PrintDataInPageMode()           // Sub-component method
+```
+
+### Testing Standards Update
+
+#### Test File Organization
+
+Each capability package must have:
+
+| File | Purpose | Required |
+|------|---------|----------|
+| `{capability}_test.go` | Unit tests for all structs | ✅ Always |
+| `{capability}_mock_test.go` | Mock for main interface | ✅ Always |
+| `{capability}_fake_test.go` | Stateful fake | ⚠️ If stateful |
+
+Note: Interface composition tests are no longer needed with the simplified structure.
+
+#### Testing Sub-components
+
+When testing capabilities with sub-components:
+
+1. **Test each struct separately** in the main test file
+2. **Group tests by struct** using clear naming:
+   - `TestCommands_*` for main struct methods
+   - `TestPagePrint_*` for sub-component methods
+3. **Mock only the main interface** (sub-components are implementation details)
+4. **Fake can track state** across all components if needed
 
 ### 🧪 Step 4: Create Unit Tests
 
@@ -928,11 +854,13 @@ var _ barcode.Capability = (*FakeCapability)(nil)
 ### Mistake 1: Wrong Package for Tests
 
 ❌ **Wrong:**
+
 ```go
 package barcode  // Same as implementation
 ```
 
 ✅ **Correct:**
+
 ```go
 package barcode_test  // _test suffix
 ```
@@ -940,6 +868,7 @@ package barcode_test  // _test suffix
 ### Mistake 2: Missing Interface Compliance
 
 ❌ **Wrong:**
+
 ```go
 type Commands struct {
     // ...
@@ -947,6 +876,7 @@ type Commands struct {
 ```
 
 ✅ **Correct:**
+
 ```go
 var _ Capability = (*Commands)(nil)
 
@@ -958,6 +888,7 @@ type Commands struct {
 ### Mistake 3: Duplicate Compliance Checks
 
 ❌ **Wrong:**
+
 ```go
 var _ Capability = (*MockCapability)(nil)
 // ... some code ...
@@ -965,6 +896,7 @@ var _ Capability = (*MockCapability)(nil)  // Duplicate!
 ```
 
 ✅ **Correct:**
+
 ```go
 var _ Capability = (*MockCapability)(nil)  // Only once
 ```
@@ -972,6 +904,7 @@ var _ Capability = (*MockCapability)(nil)  // Only once
 ### Mistake 4: Tests in Wrong Location
 
 ❌ **Wrong:**
+
 ```
 escpos/
 ├── barcode.go
@@ -981,6 +914,7 @@ escpos/
 ```
 
 ✅ **Correct:**
+
 ```
 escpos/
 └── barcode/

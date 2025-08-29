@@ -32,7 +32,7 @@ func BubbleSort(arr []int) {
 	}
 }
 
-func chapter2() {
+func Chapter2() {
 	const x = 20
 	var i int = x
 	var f float64 = x

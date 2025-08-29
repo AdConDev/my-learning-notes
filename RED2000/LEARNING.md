@@ -17,3 +17,5 @@
 - Exponential Backoff, deadlock
 - Dictionary Attack, Brute Force Attack
 - cryptography, password hashing
+- query parameters
+- index and query optimization

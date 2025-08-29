@@ -176,3 +176,4 @@
 - I have been working in Character and Position commands, just declaring base commands and interfaces for now. I advanced heavy on them but some refactoring is still needed.
 - I have refactored some methods and tests of Printing commands.
 - I reviewed topics like Backpressure and Exponential Backoff and created simple examples.
+- I will take a look at database internals and how they can be optimized for our use case. Probably I will implement a DBMS from scratch.
